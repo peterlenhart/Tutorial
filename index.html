@@ -1709,8 +1709,8 @@
       hintText.style.display = 'none';
       actionButton.style.display = 'none';
       document.getElementById('instructionText').style.display = 'none';
-      verdecktesMesh.visible = false;
-      verdecktesMesh.userData.revealed = false;
+      // verdecktesMesh bleibt sichtbar (zeigt aufgedecktes Kippziel)
+      verdecktesMesh.userData.revealed = true;
       
       // Buttons UNSICHTBAR und INAKTIV lassen
       document.getElementById('richtungButtons').classList.add('hidden');
