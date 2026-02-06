@@ -1696,11 +1696,7 @@
       gamePhase = 'spielen';
       currentMode = 'kanten';
       
-      // Würfel auf Startlage resetten (Q3, f2 oben)
-      cube.position.set(-offset, offset, 0.109375 + offset);
-      cube.rotation.set(0, 0, 0);
-      currentQuadrant = 3;
-      topFace = 'f2';
+      // Würfel bleibt in aktueller Position/Lage (kein Reset!)
 
       // Countdown STOPPEN
       stopCountdown();
@@ -1726,8 +1722,8 @@
         const zahl = erstesKippziel.zahl;
         const farbe = FARB_DISPLAY[erstesKippziel.color.name] || erstesKippziel.color.name;
         tutText.innerHTML = '<b>ÜBERLEGE &amp; ENTSCHEIDE</b><br>' +
-          'Wie oft und in welche Richtung musst du den Würfel kippen, damit ' + zahl + ' neben ' + farbe + ' liegt? Kippe zügig und entschlossen nach deinem Plan. Zögern wird als &bdquo;Schauen&ldquo; erfasst und schmälert am Ende deinen BRAIN SCORE WERT.<br>' +
-          '<i>Die angekippte Richtung gilt, zurückkippen ist gesperrt.</i>';
+          'Wie oft und in welche Richtung musst du den Würfel kippen, damit ' + zahl + ' neben ' + farbe + ' liegt? Kippe zügig nach deinem Plan. Zögern wird erkannt und schmälert am Ende deinen BRAIN SCORE WERT.<br>' +
+          '<i>Der Ankipp gibt die Richtung vor. (Gegenrichtung dann gesperrt)</i>';
       }
       tutText.style.display = 'block';
 
