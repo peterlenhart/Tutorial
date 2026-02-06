@@ -123,7 +123,7 @@
     
     #tutorialText {
       position: absolute;
-      top: 477px;
+      top: 421px;
       left: 66px;
       width: 284px;
       text-align: left;
@@ -1726,9 +1726,8 @@
         const zahl = erstesKippziel.zahl;
         const farbe = FARB_DISPLAY[erstesKippziel.color.name] || erstesKippziel.color.name;
         tutText.innerHTML = '<b>ÜBERLEGE &amp; ENTSCHEIDE</b><br>' +
-          'Wie oft und in welche Richtung musst du den Würfel kippen, damit ' + zahl + ' neben ' + farbe + ' liegt?<br>' +
-          'Ist deine Entscheidung fix? Dann kippe zügig, wie geplant. Zügige, entschlossene Kippzüge werden erkannt und erhöhen am Ende deinen BRAIN SCORE WERT.<br>' +
-          '<i>Kipprichtung: Nach Ankipp, Gegenrichtung gesperrt.</i>';
+          'Wie oft und in welche Richtung musst du den Würfel kippen, damit ' + zahl + ' neben ' + farbe + ' liegt? Kippe zügig und entschlossen nach deinem Plan. Zögern wird als &bdquo;Schauen&ldquo; erfasst und schmälert am Ende deinen BRAIN SCORE WERT.<br>' +
+          '<i>Die angekippte Richtung gilt, zurückkippen ist gesperrt.</i>';
       }
       tutText.style.display = 'block';
 
