@@ -108,35 +108,34 @@
     
     #instructionText {
       position: absolute;
-      top: 423px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
+      top: 410px;
+      left: 66px;
+      width: 284px;
+      text-align: left;
       font-size: 11pt;
       font-family: Arial, sans-serif;
       color: #d4b48c;
       text-shadow: 0 1px 2px rgba(0,0,0,0.8);
       pointer-events: none;
-      width: 340px;
       line-height: 1.4;
       display: block;
     }
     
-    #edelstein {
+    #verdecktesKippziel {
       position: absolute;
       width: 45px;
       height: 90px;
-      left: 50%;
-      top: 540px;
-      transform: translateX(-50%);
+      left: 10px;
+      top: 414px;
       cursor: pointer;
       z-index: 300;
       animation: pulsate 1.5s ease-in-out infinite;
+      transform-origin: center center;
     }
     
     @keyframes pulsate {
-      0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
-      50% { opacity: 0.6; transform: translateX(-50%) scale(1.08); }
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.08); }
     }
 
     #actionButton {
@@ -334,7 +333,7 @@
     <div id="handIcon">👆</div>
     <div id="hintText"></div>
     <div id="instructionText">Kippe den Würfel in der Box in beliebige Richtung und langsam von Ecke zu Ecke. Merke dir möglichst viele Zahlenpositionen.<br>Wenn du bereit bist, dann decke dein erstes von sechs KIPP-Zielen auf.</div>
-    <img id="edelstein" src="1000068122.png" style="display:block;">
+    <img id="verdecktesKippziel" src="verdecktes.png" style="display:block;">
     <div id="brainScore"></div>
     <div id="countdown">60</div>
     <button id="actionButton">weiter</button>
@@ -1661,7 +1660,7 @@
       hintText.style.display = 'none';
       actionButton.style.display = 'none';
       document.getElementById('instructionText').style.display = 'none';
-      document.getElementById('edelstein').style.display = 'none';
+      document.getElementById('verdecktesKippziel').style.display = 'none';
       document.getElementById('richtungButtons').classList.remove('hidden');
       kippButtons.classList.remove('hidden');
 
@@ -1712,8 +1711,8 @@
       }
     });
     
-    // Edelstein Click-Handler
-    document.getElementById('edelstein').addEventListener('click', () => {
+    // verdecktes Kippziel Click-Handler
+    document.getElementById('verdecktesKippziel').addEventListener('click', () => {
       if (gamePhase === 'kippen') {
         phaseKippenToSpielen();
       }
@@ -1730,7 +1729,7 @@
       actionButton.style.display = 'none';
       countdown.style.display = 'none';
       document.getElementById('instructionText').style.display = 'block';
-      document.getElementById('edelstein').style.display = 'block';
+      document.getElementById('verdecktesKippziel').style.display = 'block';
       kippButtons.classList.add('hidden');
       document.getElementById('richtungButtons').classList.add('hidden');
       
@@ -2125,7 +2124,7 @@
         gamePhase = 'kippen';
         handDemo.visible = false; // Hand sofort ausblenden
         
-        return; // Anleitung und Edelstein sind bereits sichtbar
+        return; // Anleitung und verdecktes Kippziel sind bereits sichtbar
       }
     });
     
