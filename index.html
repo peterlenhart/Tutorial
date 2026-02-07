@@ -2042,6 +2042,11 @@
         swipeStartY = touch.clientY;
         isSwiping = true;
         
+        // Auch für Raycaster (verdecktes Kippziel) speichern
+        if (verdecktesMesh.visible) {
+          lastTouchPos = { x: touch.clientX, y: touch.clientY };
+        }
+        
         return; // Demo-Stop komplett, jetzt touchmove übernimmt
       }
       
@@ -2283,9 +2288,19 @@
     renderer.domElement.addEventListener('click', (e) => {
       if (gamePhase === 'demo') {
         gamePhase = 'kippen';
-        handDemo.visible = false; // Hand sofort ausblenden
+        handDemo.visible = false;
         
-        return; // Anleitung und verdecktes Kippziel sind bereits sichtbar
+        // Direkt prüfen ob verdecktes Kippziel angeklickt wurde
+        if (verdecktesMesh.visible && !verdecktesMesh.userData.revealed) {
+          const rect = renderer.domElement.getBoundingClientRect();
+          vkMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          vkMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+          vkRaycaster.setFromCamera(vkMouse, camera);
+          if (vkRaycaster.intersectObject(verdecktesMesh).length > 0) {
+            revealVerdecktesKippziel();
+          }
+        }
+        return;
       }
     });
     
