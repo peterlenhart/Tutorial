@@ -2005,7 +2005,7 @@
       if (erstesKippziel) {
         const zahl = erstesKippziel.zahl;
         const farbe = FARB_DISPLAY[erstesKippziel.color.name] || erstesKippziel.color.name;
-        tutText.innerHTML = '<b>ÜBERLEGE!</b> Wie oft, <b>von 1 bis 6</b>, und in welche Richtung musst du kippen, damit ' + zahl + ' an ' + farbe + ' liegt?<br>Tippe sooft auf den Würfel, wie du planst, zu kippen. Schubbse dann den Würfel in die gewünschte Richtung an.';
+        tutText.innerHTML = '<b>KIPPEN</b><br>Überlege! Wie oft, <b>von 1 bis 6</b>, und in welche Richtung musst du kippen, damit ' + zahl + ' an ' + farbe + ' liegt?<br>Tippe sooft auf den Würfel, wie du planst, zu kippen. Schubbse dann den Würfel in die gewünschte Richtung an.';
       }
       tutText.style.display = 'block';
       
@@ -2121,12 +2121,19 @@
       
       // Nach 1,5s Spielphase starten
       setTimeout(() => {
-        phaseKippenToSpielen();
+        if (activeCardIdx === 0 && !gameCards[0].zahl && !gameCards[0].isHit && !gameCards[0].isMiss) {
+          // Erste Runde: volles Setup
+          phaseKippenToSpielen();
+        } else {
+          // Folgerunde: nur Spielphase einrichten
+          startNextKippRunde();
+        }
       }, 1500);
     }
     
     // Tap-auf-Würfel Flag
     let kippzielChecked = false;
+    let firstEntscheidung = true;
     
     // verdecktes Kippziel Tap-Erkennung (Raycaster)
     const vkRaycaster = new THREE.Raycaster();
@@ -2135,27 +2142,55 @@
     
     renderer.domElement.addEventListener('touchstart', (e) => {
       if ((gamePhase === 'kippen' && verdecktesMesh.visible && !verdecktesMesh.userData.revealed) ||
-          (gamePhase === 'spielen' && !kippzielChecked)) {
+          (gamePhase === 'spielen' && !kippzielChecked) ||
+          (gamePhase === 'entscheidung')) {
         lastTouchPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
     }, { passive: true });
     
     renderer.domElement.addEventListener('touchend', (e) => {
-      if (gamePhase !== 'kippen' || !verdecktesMesh.visible || !lastTouchPos || verdecktesMesh.userData.revealed) return;
-      if (dragActive) { lastTouchPos = null; return; }
-      
-      const rect = renderer.domElement.getBoundingClientRect();
-      vkMouse.x = ((lastTouchPos.x - rect.left) / rect.width) * 2 - 1;
-      vkMouse.y = -((lastTouchPos.y - rect.top) / rect.height) * 2 + 1;
-      vkRaycaster.setFromCamera(vkMouse, camera);
-      
-      if (vkRaycaster.intersectObject(verdecktesMesh).length > 0) {
-        revealVerdecktesKippziel();
+      // Kippen-Phase: Kippziel aufdecken
+      if (gamePhase === 'kippen' && verdecktesMesh.visible && lastTouchPos && !verdecktesMesh.userData.revealed) {
+        if (dragActive) { lastTouchPos = null; return; }
+        const rect = renderer.domElement.getBoundingClientRect();
+        vkMouse.x = ((lastTouchPos.x - rect.left) / rect.width) * 2 - 1;
+        vkMouse.y = -((lastTouchPos.y - rect.top) / rect.height) * 2 + 1;
+        vkRaycaster.setFromCamera(vkMouse, camera);
+        if (vkRaycaster.intersectObject(verdecktesMesh).length > 0) {
+          revealVerdecktesKippziel();
+        }
+        lastTouchPos = null;
+        return;
       }
+      
+      // Entscheidung-Phase: Kippziel-Tap → direkt aufdecken, oder Cube-Tap → SCHAUEN
+      if (gamePhase === 'entscheidung' && lastTouchPos && !dragActive) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        vkMouse.x = ((lastTouchPos.x - rect.left) / rect.width) * 2 - 1;
+        vkMouse.y = -((lastTouchPos.y - rect.top) / rect.height) * 2 + 1;
+        vkRaycaster.setFromCamera(vkMouse, camera);
+        
+        // Option 2: Gleich nächstes Kippziel
+        if (vkRaycaster.intersectObject(verdecktesMesh).length > 0) {
+          entscheidungToSpielen();
+          lastTouchPos = null;
+          return;
+        }
+        
+        // Option 1: Cube antippen → SCHAUEN
+        if (vkRaycaster.intersectObject(cube).length > 0) {
+          entscheidungToSchauen();
+          lastTouchPos = null;
+          return;
+        }
+        lastTouchPos = null;
+        return;
+      }
+      
       lastTouchPos = null;
     }, { passive: true });
     
-    // Desktop-Klick: Kippziel aufdecken (kippen) ODER Würfel-Tap (spielen)
+    // Desktop-Klick: Kippziel aufdecken, Würfel-Tap, oder Entscheidung
     renderer.domElement.addEventListener('click', (e) => {
       const rect = renderer.domElement.getBoundingClientRect();
       vkMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -2167,7 +2202,16 @@
         if (vkRaycaster.intersectObject(cube).length > 0 && tapCount < 6) {
           tapCount++;
           updateTapIndicators();
-          
+        }
+        return;
+      }
+      
+      // Entscheidung: Kippziel oder Cube
+      if (gamePhase === 'entscheidung') {
+        if (vkRaycaster.intersectObject(verdecktesMesh).length > 0) {
+          entscheidungToSpielen();
+        } else if (vkRaycaster.intersectObject(cube).length > 0) {
+          entscheidungToSchauen();
         }
         return;
       }
@@ -2185,19 +2229,14 @@
       if (!erstesKippziel || kippzielChecked) return;
       kippzielChecked = true;
       
-      // Auto-Eval Timeout sicherheitshalber löschen
-      if (autoEvalTimeout) {
-        clearTimeout(autoEvalTimeout);
-        autoEvalTimeout = null;
-      }
-      
-      // Timer stoppen
+      if (autoEvalTimeout) { clearTimeout(autoEvalTimeout); autoEvalTimeout = null; }
       stopCountdown();
       
-      // 6-Kipp-Regel: mehr als 6 = auto-miss
+      // 6-Kipp-Regel
       if (kippCount > 6) {
         console.log('=== AUTO-MISS: mehr als 6 Kipps ===');
         drawKippzielBorder(false);
+        setTimeout(() => transitionToEntscheidung(false), 1500);
         return;
       }
       
@@ -2226,6 +2265,232 @@
       console.log('Ergebnis:', isHit ? 'TREFFER' : 'MISS');
       
       drawKippzielBorder(isHit);
+      
+      // Nach 1.5s: Ergebnis aufs Kärtchen übertragen und Entscheidungsphase
+      setTimeout(() => transitionToEntscheidung(isHit), 1500);
+    }
+    
+    function transitionToEntscheidung(isHit) {
+      const card = gameCards[activeCardIdx];
+      
+      if (isHit) {
+        bereitsGetroffen.add(card.zahl + '_' + card.color.name);
+        drawGoldenBorder(card);
+      } else {
+        card.ctx.clearRect(0, 0, 85, 170);
+        card.ctx.drawImage(leerImage, 0, 0, 85, 170);
+        card.texture.needsUpdate = true;
+        card.mesh.material.transparent = true;
+        card.mesh.material.opacity = 0.6;
+        card.mesh.material.needsUpdate = true;
+        card.zahl = null;
+        card.color = null;
+        card.isMiss = true;
+      }
+      
+      activeCardIdx++;
+      
+      if (activeCardIdx >= 6) {
+        showGameEnd();
+        return;
+      }
+      
+      // Pause nach 3. Kärtchen
+      if (activeCardIdx === 3) {
+        setButtonsDisabled(true);
+        document.getElementById('richtungButtons').classList.add('hidden');
+        kippButtons.classList.add('hidden');
+        savedCubePosition = cube.position.clone();
+        savedCubeQuaternion = cube.quaternion.clone();
+        savedTopFace = topFace;
+        savedCurrentQuadrant = currentQuadrant;
+        animateAufEcke().then(() => startPausePhase());
+        return;
+      }
+      
+      // Entscheidungsphase starten
+      gamePhase = 'entscheidung';
+      kippzielChecked = false;
+      erstesKippziel = null;
+      lockedKippDir = null;
+      currentDragDir = null;
+      
+      // verdecktesMesh an Position des nächsten Kärtchens verschieben
+      const nextCardX = cardStartX + activeCardIdx * (cardWidth + cardGap);
+      verdecktesMesh.position.set(nextCardX, cardY + 0.001, cardZ);
+      
+      // verdecktesMesh zurück auf pulsierende leernohit-Anzeige
+      drawLeernohitOnVerdecktes();
+      verdecktesMesh.visible = true;
+      verdecktesMesh.userData.revealed = false;
+      verdecktesMesh.scale.set(1, 1, 1);
+      verdecktesMat.opacity = 1;
+      
+      // Text nur beim ersten Mal
+      if (firstEntscheidung) {
+        const instrText = document.getElementById('instructionText');
+        instrText.innerHTML = '<div class="hand-spacer"></div><b>KIPPEN oder SCHAUEN</b><br><br>• Würfelschauen, danach nächstes Kippziel öffnen (kostet SCHAU-Sek.)<br><br>• Gleich nächstes Kippziel, nächster Kippzug.';
+        instrText.style.display = 'block';
+        firstEntscheidung = false;
+      } else {
+        document.getElementById('instructionText').style.display = 'none';
+      }
+      document.getElementById('tutorialText').style.display = 'none';
+      
+      // Hand-Demo starten
+      startEntscheidungDemo();
+    }
+    
+    // Option 1: SCHAUEN → kippen-Phase mit Timer
+    function entscheidungToSchauen() {
+      isDemoAnimating = false;
+      handDemo.visible = false;
+      
+      gamePhase = 'kippen';
+      currentMode = 'kanten';
+      
+      // instructionText auf SCHAUEN umschalten
+      const instrText = document.getElementById('instructionText');
+      instrText.innerHTML = '<b>SCHAUEN</b><br>Kippe den Würfel in der Box in beliebige Richtung von Ecke zu Ecke. Merke dir möglichst viele Zahlenpositionen in möglichst kurzer Zeit (wenig SCHAU-Sek.).<br>Danach öffnest du dein nächstes Kippziel.';
+      instrText.style.display = 'block';
+      document.getElementById('tutorialText').style.display = 'none';
+      
+      // SCHAUEN-Timer starten (60 Sek)
+      startCountdown(() => {
+        if (gamePhase === 'kippen' && !verdecktesMesh.userData.revealed) {
+          revealVerdecktesKippziel();
+        }
+      }, 60);
+    }
+    
+    // Option 2: Gleich Kippziel aufdecken → spielen
+    function entscheidungToSpielen() {
+      isDemoAnimating = false;
+      handDemo.visible = false;
+      
+      document.getElementById('instructionText').style.display = 'none';
+      
+      // Kippziel direkt aufdecken (revealVerdecktesKippziel → startNextKippRunde)
+      revealVerdecktesKippziel();
+    }
+    
+    // Spielphase für Folgerunden (ohne Card-Reset)
+    function startNextKippRunde() {
+      gamePhase = 'spielen';
+      currentMode = 'kanten';
+      kippzielChecked = false;
+      
+      // UI
+      hintText.style.display = 'none';
+      actionButton.style.display = 'none';
+      document.getElementById('instructionText').style.display = 'none';
+      verdecktesMesh.userData.revealed = true;
+      
+      document.getElementById('richtungButtons').classList.add('hidden');
+      kippButtons.classList.add('hidden');
+      
+      lockedKippDir = null;
+      currentDragDir = null;
+      
+      // Aktuelles Kärtchen mit Kippziel befüllen
+      if (erstesKippziel) {
+        fillCardWithKombi(activeCardIdx, erstesKippziel.zahl, erstesKippziel.color);
+      }
+      
+      // Tutorial-Text
+      const tutText = document.getElementById('tutorialText');
+      if (erstesKippziel) {
+        const zahl = erstesKippziel.zahl;
+        const farbe = FARB_DISPLAY[erstesKippziel.color.name] || erstesKippziel.color.name;
+        tutText.innerHTML = '<b>KIPPEN</b><br>Überlege! Wie oft, <b>von 1 bis 6</b>, und in welche Richtung musst du kippen, damit ' + zahl + ' an ' + farbe + ' liegt?<br>Tippe sooft auf den Würfel, wie du planst, zu kippen. Schubbse dann den Würfel in die gewünschte Richtung an.';
+      }
+      tutText.style.display = 'block';
+      
+      stopCountdown();
+      countdown.style.display = 'none';
+      
+      kippCount = 0;
+      autoEvalTimeout = null;
+      tapCount = 0;
+      updateTapIndicators();
+      
+      liegeZeiten = [];
+      liegeStartTime = performance.now();
+      
+      setButtonsDisabled(false);
+    }
+    
+    function startEntscheidungDemo() {
+      handDemo.position.copy(handOriginalPos);
+      handDemo.visible = true;
+      handDemo.rotation.z = 0;
+      isDemoAnimating = false;
+      
+      const cubeStart = cube.position.clone();
+      const cubeStartRot = cube.quaternion.clone();
+      const handStart = handDemo.position.clone();
+      
+      const wippAngle = 20 * Math.PI / 180;
+      const wippDuration = 800;
+      const pauseBetween = 250;
+      
+      function wippDemo() {
+        return new Promise(resolve => {
+          isDemoAnimating = true;
+          const startTime = performance.now();
+          function animate(currentTime) {
+            if (!isDemoAnimating || gamePhase !== 'entscheidung') { resolve(); return; }
+            const elapsed = currentTime - startTime;
+            const t = Math.min(elapsed / wippDuration, 1);
+            const angle = Math.sin(t * Math.PI) * wippAngle;
+            
+            cube.quaternion.copy(cubeStartRot);
+            cube.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -angle));
+            
+            const handOffset = Math.sin(t * Math.PI) * 0.1;
+            handDemo.position.z = handStart.z - handOffset;
+            
+            if (t < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              cube.quaternion.copy(cubeStartRot);
+              cube.position.copy(cubeStart);
+              handDemo.position.copy(handStart);
+              handDemo.rotation.z = 0;
+              isDemoAnimating = false;
+              setTimeout(resolve, pauseBetween);
+            }
+          }
+          requestAnimationFrame(animate);
+        });
+      }
+      
+      function entscheidungLoop() {
+        if (gamePhase !== 'entscheidung') {
+          handDemo.visible = false;
+          return;
+        }
+        wippDemo().then(() => {
+          if (gamePhase !== 'entscheidung') { handDemo.visible = false; return; }
+          return new Promise(r => setTimeout(r, 400));
+        }).then(() => {
+          if (gamePhase !== 'entscheidung') { handDemo.visible = false; return; }
+          return wippDemo();
+        }).then(() => {
+          if (gamePhase !== 'entscheidung') { handDemo.visible = false; return; }
+          handDemo.visible = false;
+          setTimeout(() => {
+            if (gamePhase === 'entscheidung') {
+              handDemo.position.copy(handStart);
+              handDemo.rotation.z = 0;
+              handDemo.visible = true;
+              entscheidungLoop();
+            }
+          }, 1500);
+        }).catch(() => {});
+      }
+      
+      entscheidungLoop();
     }
     
     function drawKippzielBorder(isHit) {
@@ -2296,7 +2561,7 @@
     }
 
     backButton.addEventListener('click', () => {
-      if (gamePhase !== 'kippen' && gamePhase !== 'spielen') return;
+      if (gamePhase !== 'kippen' && gamePhase !== 'spielen' && gamePhase !== 'entscheidung') return;
       gamePhase = 'kippen'; // Zurück zu Phase 2
       currentMode = 'kanten';
       kippCount = 0;
@@ -2328,6 +2593,7 @@
       tapCount = 0;
       tapIndicatorA.mesh.visible = false; tapIndicatorB.mesh.visible = false;
       drawLeernohitOnVerdecktes();
+      verdecktesMesh.position.set(cardStartX, cardY + 0.001, cardZ);
       kippButtons.classList.add('hidden');
       document.getElementById('richtungButtons').classList.add('hidden');
       
@@ -2370,8 +2636,10 @@
       erstesKippziel = null;
       kippzielChecked = false;
       totalObservationTime = 0;
+      firstEntscheidung = true;
       tapCount = 0;
       tapIndicatorA.mesh.visible = false; tapIndicatorB.mesh.visible = false;
+      verdecktesMesh.position.set(cardStartX, cardY + 0.001, cardZ);
       
       gamePhase = 'spielziel';
       initSpielzielPhase();
@@ -2557,7 +2825,7 @@
         pauseDragActive = true;
         return;
       }
-      if (currentMode === 'kanten' && (gamePhase === 'kippen' || gamePhase === 'spielen')) {
+      if (currentMode === 'kanten' && (gamePhase === 'kippen' || gamePhase === 'spielen' || gamePhase === 'entscheidung')) {
         if (isAnimating) return;
         e.preventDefault();
         
@@ -2601,7 +2869,7 @@
         pausePivotGroup.rotation.set(pauseAlpha, pauseBeta, 0, 'YXZ');
         return;
       }
-      if (!isSwiping || isAnimating || (gamePhase !== 'kippen' && gamePhase !== 'spielen') || currentMode !== 'kanten') return;
+      if (!isSwiping || isAnimating || (gamePhase !== 'kippen' && gamePhase !== 'spielen' && gamePhase !== 'entscheidung') || currentMode !== 'kanten') return;
       e.preventDefault();
 
       const touch = e.touches[0];
@@ -2624,12 +2892,15 @@
           lockedKippDir = isCW ? 'cw' : 'ccw';
           kippDirection = lockedKippDir;
           
-          // Tutorial-Text ausblenden
           document.getElementById('tutorialText').style.display = 'none';
-          
-          // Auto-Kipp starten
           runAutoKippSequence(tapCount);
           return;
+        }
+        
+        // ENTSCHEIDUNG-Phase: Swipe startet SCHAUEN-Phase, Drag geht weiter
+        if (gamePhase === 'entscheidung') {
+          entscheidungToSchauen();
+          // Jetzt in kippen-Phase → normaler Drag weiter unten
         }
         
         // SCHAUEN-Phase: normaler manueller Drag
