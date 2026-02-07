@@ -2102,15 +2102,23 @@
         liegeStartTime = null;
       }
       
-      // Alle Liegezeiten loggen
+      // Alle Liegezeiten loggen + auf Screen anzeigen
       console.log('=== LIEGEZEITEN bei Kippziel-Klick (nach ' + kippCount + ' Kipps) ===');
+      let liegeInfo = 'LIEGEZEITEN (' + kippCount + ' Kipps):\n';
       liegeZeiten.forEach((ms, i) => {
         console.log('Liegezeit ' + (i+1) + ': ' + ms + ' ms');
+        liegeInfo += (i+1) + ': ' + ms + 'ms\n';
       });
       if (liegeZeiten.length) {
         const avg = Math.round(liegeZeiten.reduce((a,b) => a+b, 0) / liegeZeiten.length);
-        console.log('Durchschnitt: ' + avg + ' ms, Min: ' + Math.min(...liegeZeiten) + ' ms, Max: ' + Math.max(...liegeZeiten) + ' ms');
+        const info = 'Ø ' + avg + 'ms | Min ' + Math.min(...liegeZeiten) + 'ms | Max ' + Math.max(...liegeZeiten) + 'ms';
+        console.log(info);
+        liegeInfo += info;
       }
+      const tutText = document.getElementById('tutorialText');
+      tutText.style.whiteSpace = 'pre-line';
+      tutText.textContent = liegeInfo;
+      tutText.style.display = 'block';
       
       // Timer stoppen
       stopCountdown();
