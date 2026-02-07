@@ -1882,7 +1882,7 @@
       if (erstesKippziel) {
         const zahl = erstesKippziel.zahl;
         const farbe = FARB_DISPLAY[erstesKippziel.color.name] || erstesKippziel.color.name;
-        tutText.innerHTML = 'Überlege: Wie oft und in welche Richtung musst du kippen, damit ' + zahl + ' an ' + farbe + ' liegt?<br><i>Erste Kipprichtung gilt, Umkehr gesperrt.</i><br>Kippe zügig, sonst zählt der Timer SCHAU-Sekunden, und dein Kippziel verfällt (nicht erkippt).<br><br>Mit TAP auf den Würfel loggst du deinen Kippzug ein.';
+        tutText.innerHTML = 'Überlege: Wie oft und in welche Richtung musst du kippen, damit ' + zahl + ' an ' + farbe + ' liegt?<br><i>Erste Kipprichtung gilt, Umkehr gesperrt.</i><br>Kippe zügig, sonst zählt der Timer SCHAU-Sekunden, und dein Kippziel verfällt (nicht erkippt).<br>MIT TAP AUF WÜRFEL loggst du deinen Kippzug ein.';
       }
       tutText.style.display = 'block';
       
@@ -1996,13 +1996,17 @@
       }, 1500);
     }
     
+    // Tap-auf-Würfel Flag
+    let kippzielChecked = false;
+    
     // verdecktes Kippziel Tap-Erkennung (Raycaster)
     const vkRaycaster = new THREE.Raycaster();
     const vkMouse = new THREE.Vector2();
     let lastTouchPos = null;
     
     renderer.domElement.addEventListener('touchstart', (e) => {
-      if (gamePhase === 'kippen' && verdecktesMesh.visible && !verdecktesMesh.userData.revealed) {
+      if ((gamePhase === 'kippen' && verdecktesMesh.visible && !verdecktesMesh.userData.revealed) ||
+          (gamePhase === 'spielen' && !kippzielChecked)) {
         lastTouchPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
     }, { passive: true });
@@ -2045,8 +2049,7 @@
       }
     });
     
-    // Tap-auf-Würfel auch für Touch
-    let kippzielChecked = false;
+    // Tap-auf-Würfel für Touch
     renderer.domElement.addEventListener('touchend', (e) => {
       if (gamePhase === 'spielen' && !kippzielChecked && !dragActive && lastTouchPos) {
         const rect = renderer.domElement.getBoundingClientRect();
