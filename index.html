@@ -347,7 +347,7 @@
   <div id="uiOverlay">
     <div id="handIcon">👆</div>
     <div id="hintText"></div>
-    <div id="instructionText">Kippe den Würfel in der Box in beliebige Richtung und langsam von Ecke zu Ecke. Merke dir möglichst viele Zahlenpositionen.<br>Wenn du bereit bist, dann decke hier links dein erstes von sechs KIPP-Zielen auf.</div>
+    <div id="instructionText">Kippe den Würfel in der Box in beliebige Richtung von Ecke zu Ecke. Merke dir möglichst viele Zahlenpositionen.<br>Wenn du bereit bist, dann decke hier links dein erstes von sechs KIPP-Zielen auf.</div>
     <img id="verdecktesKippziel" src="leernohit.webp" style="display:none;">
     <div id="tutorialText"></div>
     <div id="brainScore"></div>
@@ -1721,9 +1721,7 @@
       if (erstesKippziel) {
         const zahl = erstesKippziel.zahl;
         const farbe = FARB_DISPLAY[erstesKippziel.color.name] || erstesKippziel.color.name;
-        tutText.innerHTML = '<b>ÜBERLEGE &amp; ENTSCHEIDE</b><br>' +
-          'Wie oft, von <b>1 bis 6</b>, und in welche Richtung musst du den Würfel kippen, damit ' + zahl + ' neben ' + farbe + ' liegt? Kippe zügig nach deinem Plan. Zögern wird erkannt und schmälert am Ende deinen BRAIN SCORE WERT.<br>' +
-          '<i>Erste Kipprichtung gilt – Umkehr gesperrt.</i>';
+        tutText.innerHTML = 'Überlege: Wie oft und in welche Richtung muss ich kippen, damit ' + zahl + ' an ' + farbe + ' liegt? Kippe zügig und entschieden – langsames, zögerliches oder ungleichmäßiges Kippen wertet der Algo als &bdquo;SCHAUEN&ldquo; (senkt den BRAIN SCORE).<br><i>Erste Kipprichtung gilt – Umkehr gesperrt.</i>';
       }
       tutText.style.display = 'block';
 
