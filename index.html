@@ -1752,13 +1752,24 @@
       document.getElementById('instructionText').style.display = 'none';
       document.getElementById('tutorialText').style.display = 'none';
       const szText = document.getElementById('spielZielText');
-      szText.innerHTML = '<b>SPIEL ZIEL</b><br>' +
-        'Erkippe möglichst viele der 6 Kippziele (z.B. ' + beispielZahl + ' an ' + farbDisplay + ') mit möglichst wenig Schau-Sekunden.' +
+      szText.innerHTML = '<b>SPIEL ZIEL:</b> Erkippe möglichst viele der 6 Kippziele (z.B. ' + beispielZahl + ' an ' + farbDisplay + ') mit möglichst wenig <b>SCHAU</b>-Sekunden.' +
         '<div style="margin-top:0.5em"><b>BRAIN SCORE:</b></div>' +
-        '100 = 6 Hits / ≤30 Schau-Sek.<br>' +
-        '12 = 1 Hit / 120 Schau-Sek.<br>' +
+        '<b>100%</b> = <b>6</b> Hits / ≤<b>30</b> SCHAU-Sek.<br>' +
+        '<b>12%</b> = 1 Hit / 120 SCHAU-Sek.<br>' +
         '0 Hits = kein Score.';
       szText.style.display = 'block';
+      
+      // weiter-Button zentriert unter Text positionieren
+      actionButton.textContent = 'weiter';
+      actionButton.disabled = false;
+      actionButton.style.display = 'block';
+      actionButton.style.opacity = '1';
+      setTimeout(() => {
+        const szRect = szText.getBoundingClientRect();
+        const containerRect = renderer.domElement.getBoundingClientRect();
+        actionButton.style.top = (szRect.bottom - containerRect.top + 22) + 'px';
+        actionButton.style.left = '180px';
+      }, 10);
     }
     initSpielzielPhase();
     
@@ -1767,6 +1778,7 @@
       gamePhase = 'demo';
       document.getElementById('spielZielText').style.display = 'none';
       document.getElementById('instructionText').style.display = 'block';
+      actionButton.style.display = 'none';
       
       // verdecktesMesh zurück auf leernohit + Puls
       verdecktesMesh.userData.revealed = false;
@@ -1811,7 +1823,7 @@
       if (erstesKippziel) {
         const zahl = erstesKippziel.zahl;
         const farbe = FARB_DISPLAY[erstesKippziel.color.name] || erstesKippziel.color.name;
-        tutText.innerHTML = 'Überlege: Wie oft und in welche Richtung muss ich kippen, damit ' + zahl + ' an ' + farbe + ' liegt? Kippe zügig und entschieden – langsames, zögerliches oder ungleichmäßiges Kippen wertet der Algo als &bdquo;SCHAUEN&ldquo; (senkt den BRAIN SCORE).<br><i>Erste Kipprichtung gilt – Umkehr gesperrt.</i>';
+        tutText.innerHTML = 'Überlege: Wie oft und in welche Richtung muss ich kippen, damit ' + zahl + ' an ' + farbe + ' liegt? Kippe zügig und entschieden – langsames, zögerliches oder ungleichmäßiges Kippen wertet der Algo als &bdquo;SCHAU Sek.&ldquo; (senkt den BRAIN SCORE).<br><i>Erste Kipprichtung gilt – Umkehr gesperrt.</i>';
       }
       tutText.style.display = 'block';
 
@@ -1860,7 +1872,9 @@
     }
     
     actionButton.addEventListener('click', () => {
-      if (gamePhase === 'kippen') {
+      if (gamePhase === 'spielziel') {
+        spielzielToDemoPhase();
+      } else if (gamePhase === 'kippen') {
         phaseKippenToSpielen();
       } else if (gamePhase === 'pause') {
         endPausePhase();
@@ -2110,13 +2124,6 @@
 
 
     renderer.domElement.addEventListener('touchstart', (e) => {
-      // Spielziel-Phase beenden beim ersten Touch
-      if (gamePhase === 'spielziel') {
-        e.preventDefault();
-        spielzielToDemoPhase();
-        return;
-      }
-      
       // Demo-Phase beenden beim ersten Touch
       if (gamePhase === 'demo') {
         e.preventDefault(); // Touch während Demo verarbeiten
@@ -2383,10 +2390,6 @@
 
     // Desktop-Support: Click startet Spielphase
     renderer.domElement.addEventListener('click', (e) => {
-      if (gamePhase === 'spielziel') {
-        spielzielToDemoPhase();
-        return;
-      }
       if (gamePhase === 'demo') {
         gamePhase = 'kippen';
         handDemo.visible = false;
