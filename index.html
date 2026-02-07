@@ -663,6 +663,38 @@
     
     // Gespeichertes erstes Kippziel
     let erstesKippziel = null;
+    
+    // === Tap-Counter Anzeige unter dem Kippziel ===
+    const tapCountCanvas = document.createElement('canvas');
+    tapCountCanvas.width = 64;
+    tapCountCanvas.height = 64;
+    const tapCountCtx = tapCountCanvas.getContext('2d');
+    const tapCountTex = new THREE.CanvasTexture(tapCountCanvas);
+    const tapCountGeo = new THREE.PlaneGeometry(cardWidth * 0.8, cardWidth * 0.8);
+    const tapCountMat = new THREE.MeshBasicMaterial({ map: tapCountTex, side: THREE.DoubleSide, transparent: true });
+    const tapCountMesh = new THREE.Mesh(tapCountGeo, tapCountMat);
+    tapCountMesh.rotation.x = -Math.PI / 2;
+    tapCountMesh.position.set(cardStartX, cardY + 0.002, cardZ + cardHeight / 2 + cardWidth * 0.5);
+    tapCountMesh.visible = false;
+    scene.add(tapCountMesh);
+    
+    let tapCount = 0;
+    
+    function drawTapCount(n) {
+      tapCountCtx.clearRect(0, 0, 64, 64);
+      if (n > 0) {
+        tapCountCtx.fillStyle = 'rgba(0,0,0,0.6)';
+        tapCountCtx.beginPath();
+        tapCountCtx.arc(32, 32, 28, 0, Math.PI * 2);
+        tapCountCtx.fill();
+        tapCountCtx.fillStyle = '#FFD700';
+        tapCountCtx.font = 'bold 36px Arial';
+        tapCountCtx.textAlign = 'center';
+        tapCountCtx.textBaseline = 'middle';
+        tapCountCtx.fillText(n.toString(), 32, 33);
+      }
+      tapCountTex.needsUpdate = true;
+    }
     // =========================
     // GRADIENT SCHATTEN ÜBER KÄRTCHEN
     // =========================
@@ -1555,6 +1587,7 @@
     let kippCount = 0;
     let liegeZeiten = [];
     let liegeStartTime = null;
+    let autoEvalTimeout = null;
     let countdownTimer = null;
 
     // UI für Demo-Phase initialisieren
@@ -1909,23 +1942,26 @@
       if (erstesKippziel) {
         const zahl = erstesKippziel.zahl;
         const farbe = FARB_DISPLAY[erstesKippziel.color.name] || erstesKippziel.color.name;
-        tutText.innerHTML = 'Überlege! Wie oft von <b>1 bis 6</b> und in welche Richtung musst du kippen, damit ' + zahl + ' an ' + farbe + ' liegt? In richtiger Richtung sind\'s nie mehr als 6 Kipps. Erste Richtung gilt. Umkehr ist gesperrt. Kippe zügig.<br>Mit <b>KLICK AUF KIPPZIEL</b> (hier links) loggst du deinen Kippzug ein.';
+        tutText.innerHTML = 'Überlege! Wie oft und in welche Richtung musst du kippen, damit ' + zahl + ' an ' + farbe + ' liegt?<br>Tippe sooft auf den Würfel, wie du planst, zu kippen. Schubbse dann den Würfel in die gewünschte Richtung an.';
       }
       tutText.style.display = 'block';
       
-      // Kipp-Timer: anzeigen als 0 (startet später bei "zu langsam"-Erkennung)
+      // Kein Timer-Display in Spielphase
       stopCountdown();
-      countdown.textContent = '0';
-      countdown.style.display = 'block';
-      if (timerTopPos) countdown.style.top = timerTopPos;
-      countdown.style.left = '180px';
+      countdown.style.display = 'none';
       
       // kippCount zurücksetzen für 6-Kipp-Regel
       kippCount = 0;
+      autoEvalTimeout = null;
       
-      // Liegezeit-Tracking
+      // Tap-Counter zurücksetzen
+      tapCount = 0;
+      drawTapCount(0);
+      tapCountMesh.visible = false;
+      
+      // Liegezeit-Tracking (erste Liegezeit = Denkzeit, kein Auto-Eval)
       liegeZeiten = [];
-      liegeStartTime = performance.now(); // Ab Start liegt der Würfel
+      liegeStartTime = performance.now();
 
       // Kärtchen werden in fillAllCards() sichtbar gemacht - NICHT hier
 
@@ -2057,74 +2093,48 @@
       lastTouchPos = null;
     }, { passive: true });
     
-    // Desktop-Klick: Kippziel aufdecken (kippen) ODER Kippziel-Check (spielen)
+    // Desktop-Klick: Kippziel aufdecken (kippen) ODER Würfel-Tap (spielen)
     renderer.domElement.addEventListener('click', (e) => {
       const rect = renderer.domElement.getBoundingClientRect();
       vkMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       vkMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       vkRaycaster.setFromCamera(vkMouse, camera);
       
-      if (gamePhase === 'spielen' && !kippzielChecked && verdecktesMesh.visible) {
-        if (vkRaycaster.intersectObject(verdecktesMesh).length > 0) {
-          checkKippzielTap();
+      // Spielen: Tap auf Würfel
+      if (gamePhase === 'spielen' && !kippzielChecked && !isAnimating) {
+        if (vkRaycaster.intersectObject(cube).length > 0 && tapCount < 6) {
+          tapCount++;
+          drawTapCount(tapCount);
+          tapCountMesh.visible = true;
         }
         return;
       }
+      
       if (gamePhase !== 'kippen' || !verdecktesMesh.visible || verdecktesMesh.userData.revealed) return;
       if (vkRaycaster.intersectObject(verdecktesMesh).length > 0) {
         revealVerdecktesKippziel();
       }
     });
     
-    // Touch auf Kippziel (spielen-Phase)
-    renderer.domElement.addEventListener('touchend', (e) => {
-      if (gamePhase === 'spielen' && !kippzielChecked && !dragActive && lastTouchPos && verdecktesMesh.visible) {
-        const rect = renderer.domElement.getBoundingClientRect();
-        vkMouse.x = ((lastTouchPos.x - rect.left) / rect.width) * 2 - 1;
-        vkMouse.y = -((lastTouchPos.y - rect.top) / rect.height) * 2 + 1;
-        vkRaycaster.setFromCamera(vkMouse, camera);
-        if (vkRaycaster.intersectObject(verdecktesMesh).length > 0) {
-          checkKippzielTap();
-        }
-        lastTouchPos = null;
-        return;
-      }
-    }, { passive: true });
+    // (Spielen: Tap auf Würfel zählt Kipps, Swipe startet Auto-Kipp-Sequenz)
     
     // Kippziel-Check bei Tap auf Würfel
     function checkKippzielTap() {
       if (!erstesKippziel || kippzielChecked) return;
       kippzielChecked = true;
       
-      // Letzte Liegezeit erfassen
-      if (liegeStartTime) {
-        liegeZeiten.push(Math.round(performance.now() - liegeStartTime));
-        liegeStartTime = null;
+      // Auto-Eval Timeout sicherheitshalber löschen
+      if (autoEvalTimeout) {
+        clearTimeout(autoEvalTimeout);
+        autoEvalTimeout = null;
       }
-      
-      // Alle Liegezeiten loggen + auf Screen anzeigen
-      console.log('=== LIEGEZEITEN bei Kippziel-Klick (nach ' + kippCount + ' Kipps) ===');
-      let liegeInfo = 'LIEGEZEITEN (' + kippCount + ' Kipps):\n';
-      liegeZeiten.forEach((ms, i) => {
-        console.log('Liegezeit ' + (i+1) + ': ' + ms + ' ms');
-        liegeInfo += (i+1) + ': ' + ms + 'ms\n';
-      });
-      if (liegeZeiten.length) {
-        const avg = Math.round(liegeZeiten.reduce((a,b) => a+b, 0) / liegeZeiten.length);
-        const info = 'Ø ' + avg + 'ms | Min ' + Math.min(...liegeZeiten) + 'ms | Max ' + Math.max(...liegeZeiten) + 'ms';
-        console.log(info);
-        liegeInfo += info;
-      }
-      const tutText = document.getElementById('tutorialText');
-      tutText.style.whiteSpace = 'pre-line';
-      tutText.textContent = liegeInfo;
-      tutText.style.display = 'block';
       
       // Timer stoppen
       stopCountdown();
       
-      // 6-Kipp-Regel: bereits überschritten = auto-miss
+      // 6-Kipp-Regel: mehr als 6 = auto-miss
       if (kippCount > 6) {
+        console.log('=== AUTO-MISS: mehr als 6 Kipps ===');
         drawKippzielBorder(false);
         return;
       }
@@ -2145,11 +2155,11 @@
         isHit = (neighborColor === erstesKippziel.color.name);
       }
       
-      console.log('=== KIPPZIEL TAP ===');
+      console.log('=== KIPPZIEL AUTO-EVAL ===');
       console.log('Ziel:', erstesKippziel.zahl, erstesKippziel.color.name);
-      console.log('topFace:', topFace, 'currentQuadrant:', currentQuadrant);
+      console.log('topFace:', topFace, 'Q:', currentQuadrant, 'kippCount:', kippCount);
       console.log('Sichtbare Slots:', JSON.stringify(visible));
-      console.log('hitSlot:', hitSlot, 'kippCount:', kippCount);
+      console.log('hitSlot:', hitSlot);
       if (hitSlot) console.log('Farbe an Slot:', SLOT_NEIGHBOR_COLORS[currentQuadrant][hitSlot]);
       console.log('Ergebnis:', isHit ? 'TREFFER' : 'MISS');
       
@@ -2228,6 +2238,7 @@
       gamePhase = 'kippen'; // Zurück zu Phase 2
       currentMode = 'kanten';
       kippCount = 0;
+      if (autoEvalTimeout) { clearTimeout(autoEvalTimeout); autoEvalTimeout = null; }
       
       // UI zurücksetzen zu Phase 2
       hintText.style.display = 'none';
@@ -2252,6 +2263,8 @@
       kippzielChecked = false;
       lockedKippDir = null;
       currentDragDir = null;
+      tapCount = 0;
+      tapCountMesh.visible = false;
       drawLeernohitOnVerdecktes();
       kippButtons.classList.add('hidden');
       document.getElementById('richtungButtons').classList.add('hidden');
@@ -2270,6 +2283,7 @@
     // Reset-Button: Zurück zu SPIEL ZIEL
     resetButton.addEventListener('click', () => {
       stopCountdown();
+      if (autoEvalTimeout) { clearTimeout(autoEvalTimeout); autoEvalTimeout = null; }
       countdown.style.display = 'none';
       isDemoAnimating = false;
       handDemo.visible = false;
@@ -2294,6 +2308,8 @@
       erstesKippziel = null;
       kippzielChecked = false;
       totalObservationTime = 0;
+      tapCount = 0;
+      tapCountMesh.visible = false;
       
       gamePhase = 'spielziel';
       initSpielzielPhase();
@@ -2488,6 +2504,7 @@
         swipeStartY = touch.clientY;
         isSwiping = true;
         dragActive = false;
+        lastTouchPos = { x: touch.clientX, y: touch.clientY };
       }
     });
 
@@ -2536,19 +2553,25 @@
         const direction = getValidDirection(deltaX, deltaY);
         if (!direction) { isSwiping = false; return; }
         
-        // In Spielphase: gesperrte Gegenrichtung prüfen
-        if (gamePhase === 'spielen' && lockedKippDir) {
-          if (lockedKippDir === 'cw' && CCW_DIRS.has(direction)) { isSwiping = false; return; }
-          if (lockedKippDir === 'ccw' && CW_DIRS.has(direction)) { isSwiping = false; return; }
+        // SPIELEN-Phase: Swipe bestimmt Richtung → Auto-Kipp-Sequenz
+        if (gamePhase === 'spielen') {
+          isSwiping = false;
+          if (tapCount <= 0 || kippzielChecked || isAnimating) return;
+          
+          const isCW = CW_DIRS.has(direction);
+          lockedKippDir = isCW ? 'cw' : 'ccw';
+          kippDirection = lockedKippDir;
+          
+          // Tutorial-Text ausblenden
+          document.getElementById('tutorialText').style.display = 'none';
+          
+          // Auto-Kipp starten
+          runAutoKippSequence(tapCount);
+          return;
         }
-        currentDragDir = direction;
         
-        // Liegezeit erfassen (spielen-Phase)
-        if (gamePhase === 'spielen' && liegeStartTime) {
-          const liegeMs = Math.round(performance.now() - liegeStartTime);
-          liegeZeiten.push(liegeMs);
-          liegeStartTime = null;
-        }
+        // SCHAUEN-Phase: normaler manueller Drag
+        currentDragDir = direction;
 
         const config = getKippConfig(direction);
         dragAxis = config.axis;
@@ -2637,6 +2660,24 @@
         return;
       }
       isSwiping = false;
+      
+      // SPIELEN-Phase: Tap auf Würfel = tapCount erhöhen
+      if (gamePhase === 'spielen' && !dragActive && !kippzielChecked && !isAnimating && lastTouchPos) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        vkMouse.x = ((lastTouchPos.x - rect.left) / rect.width) * 2 - 1;
+        vkMouse.y = -((lastTouchPos.y - rect.top) / rect.height) * 2 + 1;
+        vkRaycaster.setFromCamera(vkMouse, camera);
+        if (vkRaycaster.intersectObject(cube).length > 0) {
+          if (tapCount < 6) {
+            tapCount++;
+            drawTapCount(tapCount);
+            tapCountMesh.visible = true;
+          }
+        }
+        lastTouchPos = null;
+        return;
+      }
+      
       if (!dragActive) return;
 
       // Tipping-Point bei 45° (PI/4)
@@ -2696,34 +2737,6 @@
               const isCW = CW_DIRS.has(currentDragDir);
               kippDirection = isCW ? 'cw' : 'ccw';
               advanceTopFace();
-              
-              // Nur in Spielphase: Richtung sperren + kippCount
-              if (gamePhase === 'spielen') {
-                if (!lockedKippDir) {
-                  lockedKippDir = isCW ? 'cw' : 'ccw';
-                }
-                kippCount++;
-                
-                // Liegezeit-Start: Würfel liegt jetzt
-                liegeStartTime = performance.now();
-                
-                // 6-Kipp-Regel: mehr als 6 Kipps = automatisch nicht getroffen
-                if (kippCount > 6 && !kippzielChecked) {
-                  kippzielChecked = true;
-                  drawKippzielBorder(false);
-                }
-                
-                // Nach 6 Kipps: Liegezeiten loggen
-                if (kippCount === 6) {
-                  console.log('=== LIEGEZEITEN nach 6 Kipps ===');
-                  liegeZeiten.forEach((ms, i) => {
-                    console.log('Liegezeit vor Kipp ' + (i+2) + ': ' + ms + ' ms');
-                  });
-                  const avg = liegeZeiten.length ? Math.round(liegeZeiten.reduce((a,b) => a+b, 0) / liegeZeiten.length) : 0;
-                  console.log('Durchschnitt: ' + avg + ' ms');
-                  console.log('Min: ' + Math.min(...liegeZeiten) + ' ms, Max: ' + Math.max(...liegeZeiten) + ' ms');
-                }
-              }
             }
           }
           dragActive = false;
@@ -2914,6 +2927,46 @@
         advanceTopFace();
         await sleep(holdTime);
       }
+    }
+
+    // === Auto-Kipp-Sequenz für Spielphase ===
+    async function runAutoKippSequence(steps) {
+      if (isAnimating || kippzielChecked) return;
+      isAnimating = true;
+      
+      // Tap-Counter ausblenden
+      tapCountMesh.visible = false;
+      
+      for (let i = 0; i < steps; i++) {
+        let direction;
+        if (kippDirection === 'cw') {
+          if (currentQuadrant === 0) direction = 'east';
+          else if (currentQuadrant === 1) direction = 'south_from_q1';
+          else if (currentQuadrant === 2) direction = 'west_from_q2';
+          else direction = 'north';
+        } else {
+          if (currentQuadrant === 0) direction = 'south';
+          else if (currentQuadrant === 1) direction = 'west';
+          else if (currentQuadrant === 2) direction = 'north_from_q2';
+          else direction = 'east_from_q3';
+        }
+        
+        isAnimating = false; // performKipp setzt isAnimating selbst
+        await performKipp(direction, 350);
+        advanceTopFace();
+        
+        // Kurze Pause zwischen Kipps
+        if (i < steps - 1) {
+          await sleep(100);
+        }
+      }
+      
+      kippCount = steps;
+      isAnimating = false;
+      
+      // Trefferwertung nach kurzem Moment
+      await sleep(200);
+      checkKippzielTap();
     }
 
     // =========================
