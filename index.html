@@ -108,7 +108,7 @@
     
     #instructionText {
       position: absolute;
-      top: 477px;
+      top: 421px;
       left: 66px;
       width: 284px;
       text-align: left;
@@ -1516,7 +1516,7 @@
       onRunde();
     }
 
-    let gamePhase = 'spielziel'; // Startet mit Spielziel-Phase
+    let gamePhase = 'spielziel';
     let currentMode = 'kanten';
     let kippCount = 0;
     let countdownTimer = null;
@@ -1533,7 +1533,14 @@
       let timeElapsed = 0;
       countdown.textContent = timeElapsed;
       countdown.style.display = 'block';
-      if (savedTimerTop) countdown.style.top = savedTimerTop;
+      
+      // Position: 32px unter dem instructionText (wie weiter-Button)
+      setTimeout(() => {
+        const instrRect = document.getElementById('instructionText').getBoundingClientRect();
+        const containerRect = renderer.domElement.getBoundingClientRect();
+        countdown.style.top = (instrRect.bottom - containerRect.top + 32) + 'px';
+        countdown.style.left = '180px';
+      }, 50);
       
       countdownTimer = setInterval(() => {
         timeElapsed++;
@@ -1791,10 +1798,9 @@
         const topVal = (szRect.bottom - containerRect.top + 32) + 'px';
         actionButton.style.top = topVal;
         actionButton.style.left = '180px';
-        savedTimerTop = topVal;
       }, 10);
     }
-    let savedTimerTop = null;
+    // Direkt SCHAUEN-Phase starten (SPIEL ZIEL überspringen für Preview)
     initSpielzielPhase();
     
     // Spielziel → Demo Übergang
