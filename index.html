@@ -2068,46 +2068,70 @@
     }
     
     function drawKippzielBorder(isHit) {
-      const color = isHit ? '#FFD700' : '#FF2020'; // Gelb oder Rot
-      
-      if (!isHit) {
-        // Miss: Bild mit 60% Sättigung neu zeichnen
+      if (isHit) {
+        // Treffer: goldgelber Rahmen mit Outer Glow
+        // Glow-Effekt (mehrere halbtransparente Rahmen außen→innen)
+        verdecktesCtx.shadowColor = '#FFD700';
+        verdecktesCtx.shadowBlur = 12;
+        verdecktesCtx.strokeStyle = '#FFD700';
+        verdecktesCtx.lineWidth = 4;
+        verdecktesCtx.strokeRect(4, 4, 77, 162);
+        verdecktesCtx.shadowBlur = 0;
+        
+        // Innerer heller Rahmen
+        verdecktesCtx.strokeStyle = '#FFF0A0';
+        verdecktesCtx.lineWidth = 1;
+        verdecktesCtx.strokeRect(7, 7, 71, 156);
+        
+        verdecktesCanvasTex.needsUpdate = true;
+        
+        // Puls-Animation: kurz größer, dann zurück
+        const origScale = 1;
+        const pulseScale = 1.25;
+        const pulseDur = 300;
+        const startTime = performance.now();
+        function pulseTick(now) {
+          const t = Math.min((now - startTime) / pulseDur, 1);
+          const s = t < 0.5
+            ? origScale + (pulseScale - origScale) * (t * 2)
+            : pulseScale - (pulseScale - origScale) * ((t - 0.5) * 2);
+          verdecktesMesh.scale.set(s, s, s);
+          if (t < 1) requestAnimationFrame(pulseTick);
+          else verdecktesMesh.scale.set(origScale, origScale, origScale);
+        }
+        requestAnimationFrame(pulseTick);
+        
+      } else {
+        // Miss: Zahl grau zeichnen
         const img = colorTargetImages[erstesKippziel.color.name];
         if (img) {
-          // Temporäres Canvas für Desaturation
-          const tmpCanvas = document.createElement('canvas');
-          tmpCanvas.width = 85;
-          tmpCanvas.height = 170;
-          const tmpCtx = tmpCanvas.getContext('2d');
-          tmpCtx.drawImage(img, 0, 0, 85, 170);
-          tmpCtx.globalCompositeOperation = 'saturation';
-          tmpCtx.fillStyle = 'hsl(0, 40%, 50%)';
-          tmpCtx.fillRect(0, 0, 85, 170);
-          tmpCtx.globalCompositeOperation = 'source-over';
-          
           verdecktesCtx.clearRect(0, 0, 85, 170);
-          verdecktesCtx.drawImage(tmpCanvas, 0, 0);
+          verdecktesCtx.drawImage(img, 0, 0, 85, 170);
           
-          // Zahl neu zeichnen
+          // Farbsättigung reduzieren
+          verdecktesCtx.globalCompositeOperation = 'saturation';
+          verdecktesCtx.fillStyle = 'hsl(0, 40%, 50%)';
+          verdecktesCtx.fillRect(0, 0, 85, 170);
+          verdecktesCtx.globalCompositeOperation = 'source-over';
+          
+          // Zahl in Grau
           const displayText = erstesKippziel.zahl + ((erstesKippziel.zahl === 6 || erstesKippziel.zahl === 9) ? '.' : '');
-          verdecktesCtx.fillStyle = '#2a1810';
+          verdecktesCtx.fillStyle = '#888888';
           verdecktesCtx.font = 'bold 56px Arial';
           verdecktesCtx.textAlign = 'center';
           verdecktesCtx.textBaseline = 'middle';
           verdecktesCtx.fillText(displayText, 42, 42);
         }
+        
+        // Roter Rahmen
+        verdecktesCtx.strokeStyle = '#FF2020';
+        verdecktesCtx.lineWidth = 2;
+        verdecktesCtx.strokeRect(1, 1, 83, 168);
+        verdecktesCtx.lineWidth = 4;
+        verdecktesCtx.strokeRect(4, 4, 77, 162);
+        
+        verdecktesCanvasTex.needsUpdate = true;
       }
-      
-      // Outline 2px
-      verdecktesCtx.strokeStyle = color;
-      verdecktesCtx.lineWidth = 2;
-      verdecktesCtx.strokeRect(1, 1, 83, 168);
-      
-      // Border 4px inline
-      verdecktesCtx.lineWidth = 4;
-      verdecktesCtx.strokeRect(4, 4, 77, 162);
-      
-      verdecktesCanvasTex.needsUpdate = true;
     }
 
     backButton.addEventListener('click', () => {
