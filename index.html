@@ -121,12 +121,11 @@
       display: none;
     }
     
-    #instructionText .hand-float {
-      float: right;
-      width: 55px;
-      height: auto;
-      margin: 0 0 6px 10px;
-      opacity: 0.85;
+    #instructionText .hand-spacer {
+      float: left;
+      width: 105px;
+      height: 165px;
+      margin: 0 10px 4px 0;
     }
     
     #tutorialText {
@@ -1531,7 +1530,28 @@
     let isDemoAnimating = false;
     
     function startCountdown(onFinish) {
-      // Timer deaktiviert
+      let timeLeft = 60;
+      countdown.textContent = timeLeft;
+      countdown.style.display = 'block';
+      
+      // Position wie weiter-Button: zentriert unter instructionText
+      setTimeout(() => {
+        const instrRect = document.getElementById('instructionText').getBoundingClientRect();
+        const containerRect = renderer.domElement.getBoundingClientRect();
+        countdown.style.top = (instrRect.bottom - containerRect.top + 32) + 'px';
+        countdown.style.left = '180px';
+      }, 50);
+      
+      countdownTimer = setInterval(() => {
+        timeLeft--;
+        totalObservationTime++;
+        countdown.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          stopCountdown();
+          countdown.style.display = 'none';
+          if (onFinish) onFinish();
+        }
+      }, 1000);
     }
     
     function stopCountdown() {
@@ -1786,13 +1806,12 @@
       gamePhase = 'demo';
       document.getElementById('spielZielText').style.display = 'none';
       
-      // Hand-Bild als Float in instructionText einfügen
+      // Unsichtbarer Spacer für Text-Umfluss um animierte 3D-Hand
       const instrText = document.getElementById('instructionText');
-      if (!instrText.querySelector('.hand-float')) {
-        const handImg = document.createElement('img');
-        handImg.className = 'hand-float';
-        handImg.src = handTexture.image ? handTexture.image.src : '';
-        instrText.insertBefore(handImg, instrText.firstChild);
+      if (!instrText.querySelector('.hand-spacer')) {
+        const spacer = document.createElement('div');
+        spacer.className = 'hand-spacer';
+        instrText.insertBefore(spacer, instrText.firstChild);
       }
       instrText.style.display = 'block';
       actionButton.style.display = 'none';
@@ -1809,6 +1828,26 @@
       
       // Demo starten
       startDemoAnimation();
+      
+      // SCHAUEN-Timer starten (60 Sek)
+      startCountdown(() => {
+        // Nach 60 Sek: automatisch Kippziel aufdecken
+        if (gamePhase === 'demo' || gamePhase === 'kippen') {
+          // Falls noch in Demo: Cube resetten
+          if (gamePhase === 'demo') {
+            isDemoAnimating = false;
+            handDemo.visible = false;
+            cube.quaternion.set(0, 0, 0, 1);
+            cube.position.set(-offset, offset, 0.109375 + offset);
+            currentQuadrant = 3;
+            topFace = 'f2';
+          }
+          gamePhase = 'kippen';
+          if (!verdecktesMesh.userData.revealed) {
+            revealVerdecktesKippziel();
+          }
+        }
+      });
     }
     
     function phaseKippenToSpielen() {
@@ -1902,6 +1941,14 @@
     function revealVerdecktesKippziel() {
       if (!texturesReady) return;
       
+      // SCHAUEN-Timer stoppen
+      stopCountdown();
+      countdown.style.display = 'none';
+      
+      // Demo-Animation stoppen falls noch aktiv
+      isDemoAnimating = false;
+      handDemo.visible = false;
+      
       // Kippziel generieren
       const erfuellteKombis = getCurrentErfuellteKombis();
       erstesKippziel = generateNeueKombiOhne(erfuellteKombis);
@@ -1983,9 +2030,18 @@
       // UI zurücksetzen zu Phase 2
       hintText.style.display = 'none';
       actionButton.style.display = 'none';
+      stopCountdown();
       countdown.style.display = 'none';
       document.getElementById('instructionText').style.display = 'block';
       document.getElementById('tutorialText').style.display = 'none';
+      
+      // SCHAUEN-Timer neu starten
+      startCountdown(() => {
+        if ((gamePhase === 'demo' || gamePhase === 'kippen') && !verdecktesMesh.userData.revealed) {
+          gamePhase = 'kippen';
+          revealVerdecktesKippziel();
+        }
+      });
       verdecktesMesh.visible = true;
       verdecktesMesh.userData.revealed = false;
       verdecktesMesh.scale.set(1, 1, 1);
