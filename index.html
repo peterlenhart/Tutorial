@@ -73,17 +73,15 @@
     
     #brainScore {
       position: absolute;
-      top: 526px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      font-size: 28px;
-      font-weight: bold;
+      top: 421px;
+      left: 66px;
+      width: 284px;
+      text-align: left;
+      font-family: Arial, sans-serif;
       color: #d4b48c;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
       pointer-events: none;
-      width: 360px;
-      line-height: auto;
+      line-height: 1.6;
       opacity: 0;
       display: none;
     }
@@ -458,7 +456,7 @@
   <div id="uiOverlay">
     <div id="handIcon">👆</div>
     <div id="hintText"></div>
-    <div id="instructionText"><b>WÜRFELSCHAUEN</b><br>Kippe den Würfel in der Box in beliebige Richtung von Ecke zu Ecke. Merke dir möglichst viele Zahlenpositionen in möglichst kurzer Zeit (wenig SCHAU-Sek.).<br>Nach dem SCHAUEN deckst du hier links dein erstes von sechs Kippzielen auf.</div>
+    <div id="instructionText"><b>SCHAUEN & MERKEN</b><br>Kippe den Würfel in der Box in beliebige Richtung von Ecke zu Ecke. Merke dir möglichst viele Zahlenpositionen in möglichst kurzer Zeit (Nutze SCHAU-Sek. effektiv).<br>Nach dem SCHAUEN deckst du hier links dein erstes von sechs Kippzielen auf.</div>
     <img id="verdecktesKippziel" src="leernohit.webp" style="display:none;">
     <div id="tutorialText"></div>
     <div id="spielZielText"></div>
@@ -1464,6 +1462,12 @@
       document.getElementById('richtungButtons').classList.add('hidden');
       kippButtons.classList.add('hidden');
       document.getElementById('kippTarget').style.display = 'none';
+      document.getElementById('tutorialText').style.display = 'none';
+      document.getElementById('instructionText').style.display = 'none';
+      document.getElementById('entscheidungText').style.display = 'none';
+      document.getElementById('eyeIcon').style.display = 'none';
+      countdown.style.display = 'none';
+      resetButton.style.display = 'none';
       
       // Wie viele Treffer?
       const treffer = bereitsGetroffen.size;
@@ -1474,18 +1478,28 @@
       // hintText verstecken
       hintText.style.display = 'none';
       
-      // actionButton verstecken
-      actionButton.style.display = 'none';
-      
       // Brain Score anzeigen
       const brainScore = document.getElementById('brainScore');
       if (scoreValue === "No Hit, no Score") {
-        brainScore.innerHTML = 'BRAIN SCORE:<br>No Hit, no Score';
+        brainScore.innerHTML = '<span style="font-size:12pt;font-weight:bold;">BRAIN SCORE:<br>No Hit, no Score</span>' +
+          '<br><span style="font-size:10pt;font-weight:normal;">' + treffer + ' HITS | ' + totalObservationTime + ' SCHAU-Sekunden</span>';
       } else {
-        brainScore.innerHTML = `BRAIN SCORE: ${scoreValue}<br><span style="font-size: 26px">Best=100%/worst=12%</span>`;
+        brainScore.innerHTML = '<span style="font-size:12pt;font-weight:bold;">BRAIN SCORE: ' + scoreValue + '</span>' +
+          '<br><span style="font-size:10pt;font-weight:normal;">Best: 100% | Worst: 12%</span>' +
+          '<br><span style="font-size:10pt;font-weight:normal;">' + treffer + ' HITS | ' + totalObservationTime + ' SCHAU-Sekunden</span>';
       }
       brainScore.style.display = 'block';
       brainScore.style.opacity = '1';
+      
+      // "Neues Spiel" Button anzeigen (Position wie Auge/Timer/weiter)
+      actionButton.textContent = 'Neues Spiel';
+      actionButton.style.display = 'block';
+      actionButton.style.opacity = '1';
+      if (timerTopPos) {
+        actionButton.style.top = timerTopPos;
+      }
+      actionButton.style.left = '180px';
+      actionButton.disabled = false;
     }
 
 
@@ -2013,11 +2027,10 @@
       document.getElementById('instructionText').style.display = 'none';
       document.getElementById('tutorialText').style.display = 'none';
       const szText = document.getElementById('spielZielText');
-      szText.innerHTML = '<b>SPIEL ZIEL:</b> Erkippe möglichst viele der <b>6 Kippziele</b> (z.B. wie hier: <i>' + beispielZahl + '</i> an <i>' + farbDisplay + '</i>) mit möglichst wenig <b>SCHAU</b>-Sekunden.' +
-        '<div style="margin-top:0.5em"><b>BRAIN SCORE:</b></div>' +
-        '<b>100%</b> = <b>6</b> Hits / bis <b>20</b> SCHAU-Sek.<br>' +
-        '<b>12%</b> = <b>1</b> Hit / <b>120</b> SCHAU-Sek.<br>' +
-        '0 Hits = kein Score.';
+      szText.innerHTML = '<b>SPIEL ZIEL</b><br>' +
+        '• Finde möglichst oft die richtige Kipp-Anzahl und -Richtung heraus, damit der Würfel, wie hier z.B., das Kippziel <i>' + beispielZahl + '</i> an <i>' + farbDisplay + '</i> trifft.<br>' +
+        'Es sind nie mehr als 6 Kipps, wenn die Richtung stimmt.<br>' +
+        '• Nutze SCHAU-Sekunden effektiv.';
       szText.style.display = 'block';
       
       // weiter-Button zentriert unter Text positionieren
@@ -2190,7 +2203,7 @@
       if (activeCardIdx === 0 && erstesKippziel) {
         const zahl = erstesKippziel.zahl;
         const farbe = FARB_DISPLAY[erstesKippziel.color.name] || erstesKippziel.color.name;
-        tutText.innerHTML = '<b>ÜBERLEGE!</b> Wie oft, <b>von 1 bis 6</b>, und in welche Richtung musst du kippen, damit ' + zahl + ' an ' + farbe + ' liegt?<br>Tippe sooft auf den Würfel, wie du planst, zu kippen. Schubbse dann den Würfel in die gewünschte Richtung an.';
+        tutText.innerHTML = '<b>TIPPEN & SCHUBSEN</b><br>Das Kippziel links zeigt: <i>' + zahl + '</i> muss zu <i>' + farbe + '</i> gekippt werden.<br>TIPPE ein- bis sechsmal auf den Würfel.<br>SCHUBSE ihn anschließend in die gewünschte Richtung, um den Kippzug auszulösen.';
         tutText.style.display = 'block';
       } else {
         tutText.style.display = 'none';
@@ -2330,6 +2343,11 @@
         phaseKippenToSpielen();
       } else if (gamePhase === 'pause') {
         endPausePhase();
+      } else if (gamePhase === 'ende') {
+        // "Neues Spiel" → kompletter Reset wie resetButton
+        document.getElementById('brainScore').style.display = 'none';
+        document.getElementById('brainScore').style.opacity = '0';
+        resetButton.click();
       }
     });
     
