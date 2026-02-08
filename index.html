@@ -472,7 +472,7 @@
       pointer-events: auto;
       border: none;
       border-radius: 6px;
-      background: url('button_lang.webp') center/cover no-repeat;
+      background: transparent;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -483,12 +483,21 @@
       text-transform: uppercase;
       color: #d0d0d0;
       text-shadow: 0 1px 1px rgba(255,255,255,0.4), 0 -1px 1px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+    .startClickZone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url('button_lang.webp') center/cover no-repeat;
+      opacity: 0.8;
+      border-radius: 6px;
     }
     .startClickZone:active {
       filter: brightness(0.85);
     }
-    #btnTutorial { top: 496px; }
-    #btnSpielen  { top: 541px; }
+    #btnTutorial { top: 451px; }
+    #btnSpielen  { top: 519px; font-size: 18px; letter-spacing: 2.5px; }
 
     /* === ZURUECK-BUTTON (zur Startseite) === */
     #backToStart {
@@ -527,7 +536,7 @@
   
   <!-- START-OVERLAY -->
   <div id="startOverlay">
-    <button class="startClickZone" id="btnTutorial">TUTORIAL</button>
+    <button class="startClickZone" id="btnTutorial">SPIEL MIT ANLEITUNG</button>
     <button class="startClickZone" id="btnSpielen">SPIELEN</button>
   </div>
   
@@ -2111,8 +2120,11 @@
       }
       drawBeispiel();
       
-      // Mesh ausblenden in Spielziel-Phase (wird erst in Entscheidung sichtbar)
-      verdecktesMesh.visible = false;
+      // Mesh sichtbar mit Beispiel, kein Puls
+      verdecktesMesh.visible = true;
+      verdecktesMesh.userData.revealed = true;
+      verdecktesMesh.scale.set(1, 1, 1);
+      verdecktesMat.opacity = 1;
       
       // Texte
       document.getElementById('instructionText').style.display = 'none';
