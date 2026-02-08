@@ -2140,14 +2140,16 @@
       lockedKippDir = null;
       currentDragDir = null;
       
-      // Tutorial-Text mit aktuellem Kippziel anzeigen
+      // Tutorial-Text NUR in Runde 1
       const tutText = document.getElementById('tutorialText');
-      if (erstesKippziel) {
+      if (activeCardIdx === 0 && erstesKippziel) {
         const zahl = erstesKippziel.zahl;
         const farbe = FARB_DISPLAY[erstesKippziel.color.name] || erstesKippziel.color.name;
         tutText.innerHTML = '<b>ÜBERLEGE!</b> Wie oft, <b>von 1 bis 6</b>, und in welche Richtung musst du kippen, damit ' + zahl + ' an ' + farbe + ' liegt?<br>Tippe sooft auf den Würfel, wie du planst, zu kippen. Schubbse dann den Würfel in die gewünschte Richtung an.';
+        tutText.style.display = 'block';
+      } else {
+        tutText.style.display = 'none';
       }
-      tutText.style.display = 'block';
       
       // Zielscheibe zwischen Zeile 7/8, Spalte C/D positionieren
       const targetPos3D = new THREE.Vector3(-0.15625, 0.48, 0.265625);
@@ -2494,8 +2496,10 @@
       kippzielChecked = false;
       erstesKippziel = null;
       
-      // Spielen-UI ausblenden
+      // ALLE Texte ausblenden - nach erstem Kippziel keine Texte mehr
       document.getElementById('tutorialText').style.display = 'none';
+      document.getElementById('instructionText').style.display = 'none';
+      document.getElementById('entscheidungText').style.display = 'none';
       document.getElementById('kippTarget').style.display = 'none';
       tapCount = 0;
       tapIndicatorA.mesh.visible = false;
@@ -2514,14 +2518,9 @@
       verdecktesMesh.scale.set(1, 1, 1);
       verdecktesMat.opacity = 1;
       
-      // Auge an fester Position einblenden (zentriert, top 475px)
+      // Auge an fester Position einblenden (zentriert, pulsierend)
       const eyeIcon = document.getElementById('eyeIcon');
       eyeIcon.style.display = 'block';
-      
-      // Entscheidungs-Text
-      const etText = document.getElementById('entscheidungText');
-      etText.innerHTML = '<b>IMMER 2 OPTIONEN</b><br>• Zuerst auf Augen-Icon – Würfelschauen (empfohlen)<br>• Gleich auf Kippziel – Kippzug machen';
-      etText.style.display = 'block';
       
       // Timer ausblenden
       countdown.style.display = 'none';
@@ -2530,12 +2529,11 @@
     function startFreeSchauenPhase() {
       gamePhase = 'kippen';
       
-      // Auge und Entscheidungs-Text ausblenden
+      // Auge ausblenden, keine Texte
       document.getElementById('eyeIcon').style.display = 'none';
       document.getElementById('entscheidungText').style.display = 'none';
-      
-      // WÜRFELSCHAUEN-Anleitung zeigen
-      document.getElementById('instructionText').style.display = 'block';
+      document.getElementById('instructionText').style.display = 'none';
+      document.getElementById('tutorialText').style.display = 'none';
       
       // Timer "0" anzeigen und starten (60 Sek max)
       countdown.textContent = '0';
@@ -2564,7 +2562,9 @@
       actionButton.style.display = 'none';
       stopCountdown();
       countdown.style.display = 'none';
-      document.getElementById('instructionText').style.display = 'block';
+      if (activeCardIdx === 0) {
+        document.getElementById('instructionText').style.display = 'block';
+      }
       document.getElementById('tutorialText').style.display = 'none';
       
       // SCHAUEN-Timer neu starten
