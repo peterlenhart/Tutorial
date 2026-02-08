@@ -502,35 +502,6 @@
     #btnSpielen  { top: 519px; font-size: 18px; letter-spacing: 2.5px; }
 
     /* === ZURUECK-BUTTON (zur Startseite) === */
-    #backToStart {
-      display: none;
-      position: absolute;
-      top: 22px;
-      left: 0px;
-      width: 45px;
-      height: 45px;
-      background: linear-gradient(180deg, #606060 0%, #404040 100%);
-      border: 2px solid #808080;
-      border-radius: 8px;
-      cursor: pointer;
-      pointer-events: auto;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.4),
-                  inset 0 1px 0 rgba(255,255,255,0.8);
-      transition: all 0.15s ease;
-      z-index: 200;
-      padding: 0;
-    }
-    #backToStart:active {
-      transform: scale(0.95);
-      background: linear-gradient(180deg, #505050 0%, #303030 100%);
-    }
-    #backToStart svg {
-      width: 26px;
-      height: 26px;
-      display: block;
-      margin: auto;
-      margin-top: 2px;
-    }
   </style>
 </head>
 <body>
@@ -557,7 +528,6 @@
     <button id="actionButton">weiter</button>
     <button id="backButton">↻</button>
     <button id="resetButton"><svg viewBox="0 0 24 24" fill="none" stroke="#c0b8a8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
-    <button id="backToStart"><svg viewBox="0 0 24 24" fill="none" stroke="#c0b8a8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
     
     <div id="richtungButtons" class="hidden" style="position:absolute;top:540px;left:50%;transform:translateX(-50%);display:flex;gap:21px;width:180px;z-index:200;">
       <button id="cwBtn" class="kippBtn" style="flex:1;height:45px;font-size:40px;line-height:1;position:relative;"><span style="position:absolute;top:calc(50% - 3px);left:50%;transform:translate(-50%,-50%);font-size:40px;">↻</span></button>
@@ -2096,6 +2066,8 @@
         return;
       }
       
+      gamePhase = 'spielziel';
+      
       // Zufälligen Slot wählen (S1-S4)
       const slotIdx = Math.floor(Math.random() * 4);
       const slotNames = ['S1', 'S2', 'S3', 'S4'];
@@ -2132,8 +2104,8 @@
       document.getElementById('instructionText').style.display = 'none';
       document.getElementById('tutorialText').style.display = 'none';
       
-      // Zurück-Button zur Startseite zeigen (Zeilen 1/2, Spalte A)
-      document.getElementById('backToStart').style.display = 'block';
+      // Zurück-Button zur Startseite zeigen (derselbe resetButton wie in anderen Phasen)
+      resetButton.style.display = 'block';
       
       const szText = document.getElementById('spielZielText');
       szText.innerHTML = '<b>SPIEL ZIEL</b><br>' +
@@ -2179,7 +2151,6 @@
       document.getElementById('eyeIcon').style.display = 'none';
       document.getElementById('kippTarget').style.display = 'none';
       document.getElementById('brainScore').style.display = 'none';
-      document.getElementById('backToStart').style.display = 'none';
       resetButton.style.display = 'none';
       actionButton.style.display = 'none';
       countdown.style.display = 'none';
@@ -2189,18 +2160,12 @@
       gamePhase = 'start';
     }
     
-    // BackToStart-Button Click-Handler
-    document.getElementById('backToStart').addEventListener('click', () => {
-      backToStartScreen();
-    });
-    
     // === ENTSCHEIDUNGS-PHASE ===
     function initEntscheidungPhase() {
       gamePhase = 'entscheidung';
       
-      // SpielZiel-Text und Zurück-Button ausblenden
+      // SpielZiel-Text ausblenden
       document.getElementById('spielZielText').style.display = 'none';
-      document.getElementById('backToStart').style.display = 'none';
       actionButton.style.display = 'none';
       document.getElementById('instructionText').style.display = 'none';
       document.getElementById('tutorialText').style.display = 'none';
