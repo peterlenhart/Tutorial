@@ -247,6 +247,7 @@
       color: #c0b8a8;
       cursor: pointer;
       pointer-events: auto;
+      display: none;
       box-shadow: 0 4px 8px rgba(0,0,0,0.4),
                   inset 0 1px 0 rgba(255,255,255,0.8);
       transition: all 0.15s ease;
@@ -378,7 +379,7 @@
     }
 
     #resetButton {
-      display: block;
+      display: none;
       position: absolute;
       top: 22px;
       left: 0px;
@@ -452,28 +453,26 @@
       display: none !important;
     }
 
-    /* === START-OVERLAY === */
-    /* === START-BUTTONS (über 3D-Szene) === */
+    /* === START-OVERLAY (transparent, Buttons über 3D-Szene) === */
     #startOverlay {
       position: absolute;
-      top: 0; left: 0;
+      top: 0;
       width: 360px; height: 720px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 300;
       pointer-events: none;
     }
-    .startBtn {
+    .startClickZone {
       position: absolute;
-      left: 67.5px;
-      width: 225px;
+      left: 67px;
+      width: 226px;
       height: 42px;
-      border: none;
       cursor: pointer;
       pointer-events: auto;
-      background-image: url('button-lang.webp');
-      background-size: 100% 100%;
-      background-repeat: no-repeat;
+      border: none;
+      border-radius: 6px;
+      background: url('button_lang.webp') center/cover no-repeat;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -485,20 +484,51 @@
       color: #d0d0d0;
       text-shadow: 0 1px 1px rgba(255,255,255,0.4), 0 -1px 1px rgba(0,0,0,0.6);
     }
-    .startBtn:active {
+    .startClickZone:active {
       filter: brightness(0.85);
     }
-    #btnTutorial { top: 495px; }
-    #btnSpielen  { top: 540px; }
+    #btnTutorial { top: 496px; }
+    #btnSpielen  { top: 541px; }
+
+    /* === ZURUECK-BUTTON (zur Startseite) === */
+    #backToStart {
+      display: none;
+      position: absolute;
+      top: 22px;
+      left: 0px;
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(180deg, #606060 0%, #404040 100%);
+      border: 2px solid #808080;
+      border-radius: 8px;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4),
+                  inset 0 1px 0 rgba(255,255,255,0.8);
+      transition: all 0.15s ease;
+      z-index: 200;
+      padding: 0;
+    }
+    #backToStart:active {
+      transform: scale(0.95);
+      background: linear-gradient(180deg, #505050 0%, #303030 100%);
+    }
+    #backToStart svg {
+      width: 26px;
+      height: 26px;
+      display: block;
+      margin: auto;
+      margin-top: 2px;
+    }
   </style>
 </head>
 <body>
   <div id="container"></div>
   
-  <!-- START-BUTTONS -->
+  <!-- START-OVERLAY -->
   <div id="startOverlay">
-    <button class="startBtn" id="btnTutorial">GEFÜHRTES TESTSPIEL</button>
-    <button class="startBtn" id="btnSpielen">SPIEL</button>
+    <button class="startClickZone" id="btnTutorial">TUTORIAL</button>
+    <button class="startClickZone" id="btnSpielen">SPIELEN</button>
   </div>
   
   <div id="uiOverlay">
@@ -516,6 +546,7 @@
     <button id="actionButton">weiter</button>
     <button id="backButton">↻</button>
     <button id="resetButton"><svg viewBox="0 0 24 24" fill="none" stroke="#c0b8a8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
+    <button id="backToStart"><svg viewBox="0 0 24 24" fill="none" stroke="#c0b8a8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
     
     <div id="richtungButtons" class="hidden" style="position:absolute;top:540px;left:50%;transform:translateX(-50%);display:flex;gap:21px;width:180px;z-index:200;">
       <button id="cwBtn" class="kippBtn" style="flex:1;height:45px;font-size:40px;line-height:1;position:relative;"><span style="position:absolute;top:calc(50% - 3px);left:50%;transform:translate(-50%,-50%);font-size:40px;">↻</span></button>
@@ -767,6 +798,7 @@
     const verdecktesMesh = new THREE.Mesh(verdecktesGeo, verdecktesMat);
     verdecktesMesh.rotation.x = -Math.PI / 2;
     verdecktesMesh.position.set(cardStartX, cardY + 0.001, cardZ);
+    verdecktesMesh.visible = false; // Erst sichtbar wenn Spiel startet
     scene.add(verdecktesMesh);
     
     // Gespeichertes erstes Kippziel
@@ -2079,15 +2111,16 @@
       }
       drawBeispiel();
       
-      // Mesh sichtbar, kein Puls
-      verdecktesMesh.visible = true;
-      verdecktesMesh.userData.revealed = true;
-      verdecktesMesh.scale.set(1, 1, 1);
-      verdecktesMat.opacity = 1;
+      // Mesh ausblenden in Spielziel-Phase (wird erst in Entscheidung sichtbar)
+      verdecktesMesh.visible = false;
       
       // Texte
       document.getElementById('instructionText').style.display = 'none';
       document.getElementById('tutorialText').style.display = 'none';
+      
+      // Zurück-Button zur Startseite zeigen (Zeilen 1/2, Spalte A)
+      document.getElementById('backToStart').style.display = 'block';
+      
       const szText = document.getElementById('spielZielText');
       szText.innerHTML = '<b>SPIEL ZIEL</b><br>' +
         '• Finde möglichst oft die richtige Kipp-Anzahl und -Richtung heraus, damit der Würfel das Kippziel trifft. Hier z.B. <b>' + beispielZahl + '</b> an <b>' + farbDisplay + '</b>.<br>' +
@@ -2132,6 +2165,8 @@
       document.getElementById('eyeIcon').style.display = 'none';
       document.getElementById('kippTarget').style.display = 'none';
       document.getElementById('brainScore').style.display = 'none';
+      document.getElementById('backToStart').style.display = 'none';
+      resetButton.style.display = 'none';
       actionButton.style.display = 'none';
       countdown.style.display = 'none';
       verdecktesMesh.visible = false;
@@ -2140,16 +2175,25 @@
       gamePhase = 'start';
     }
     
+    // BackToStart-Button Click-Handler
+    document.getElementById('backToStart').addEventListener('click', () => {
+      backToStartScreen();
+    });
+    
     // === ENTSCHEIDUNGS-PHASE ===
     function initEntscheidungPhase() {
       gamePhase = 'entscheidung';
       
-      // SpielZiel-Text ausblenden
+      // SpielZiel-Text und Zurück-Button ausblenden
       document.getElementById('spielZielText').style.display = 'none';
+      document.getElementById('backToStart').style.display = 'none';
       actionButton.style.display = 'none';
       document.getElementById('instructionText').style.display = 'none';
       document.getElementById('tutorialText').style.display = 'none';
       document.getElementById('kippTarget').style.display = 'none';
+      
+      // Reset-Button zeigen (ab hier verfügbar)
+      resetButton.style.display = 'block';
       
       // Würfel in Q3, ruhig liegend (kein Reset nötig - steht schon)
       cube.quaternion.set(0, 0, 0, 1);
