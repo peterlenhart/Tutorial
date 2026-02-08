@@ -73,14 +73,15 @@
     
     #brainScore {
       position: absolute;
-      top: 421px;
-      left: 66px;
-      width: 284px;
-      text-align: left;
+      top: 526px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
       font-family: Arial, sans-serif;
       color: #d4b48c;
       text-shadow: 0 1px 2px rgba(0,0,0,0.8);
       pointer-events: none;
+      width: 360px;
       line-height: 1.6;
       opacity: 0;
       display: none;
@@ -1279,6 +1280,7 @@
     }
     let openKippzielPositions = pickTwoRandomPositions();
     let offeneKippzieleVergeben = 0; // Zählt wie viele offene bereits generiert wurden
+    let isReplay = false; // Nach "Neues Spiel" → kein Erklärtext
 
     // Aktuell sichtbare Zahlen auf der Oberseite ermitteln (aus aktuellem topFace)
     function getCurrentVisibleZahlen() {
@@ -1991,6 +1993,12 @@
     
     // Beispiel-Kippziel aus aktueller Würfellage (Q3, f2 oben) generieren
     function initSpielzielPhase() {
+      // Bei Replay: Spielziel überspringen, direkt zur Entscheidung
+      if (isReplay) {
+        initEntscheidungPhase();
+        return;
+      }
+      
       // Zufälligen Slot wählen (S1-S4)
       const slotIdx = Math.floor(Math.random() * 4);
       const slotNames = ['S1', 'S2', 'S3', 'S4'];
@@ -2092,10 +2100,14 @@
       eyeIcon.style.top = (vkScreenY + 55) + 'px'; // 55px unter Kippziel-Mitte
       eyeIcon.style.display = 'block';
       
-      // Entscheidungs-Text (gleiche Position wie tutorialText)
+      // Entscheidungs-Text nur beim ersten Mal zeigen
       const etText = document.getElementById('entscheidungText');
-      etText.innerHTML = '<b>IMMER 2 OPTIONEN</b><br>• Zuerst auf Augen-Icon – Würfelschauen (empfohlen)<br>• Gleich auf Kippziel – Kippzug machen';
-      etText.style.display = 'block';
+      if (isReplay) {
+        etText.style.display = 'none';
+      } else {
+        etText.innerHTML = '<b>IMMER 2 OPTIONEN</b><br>• Zuerst auf Augen-Icon – Würfelschauen (empfohlen)<br>• Gleich auf Kippziel – Kippzug machen';
+        etText.style.display = 'block';
+      }
       
       // Timer ausblenden
       countdown.style.display = 'none';
@@ -2149,7 +2161,7 @@
         spacer.className = 'hand-spacer';
         instrText.insertBefore(spacer, instrText.firstChild);
       }
-      instrText.style.display = 'block';
+      instrText.style.display = isReplay ? 'none' : 'block';
       actionButton.style.display = 'none';
       
       // verdecktesMesh zurück auf leernohit + Puls
@@ -2200,7 +2212,7 @@
       
       // Tutorial-Text NUR in Runde 1
       const tutText = document.getElementById('tutorialText');
-      if (activeCardIdx === 0 && erstesKippziel) {
+      if (activeCardIdx === 0 && erstesKippziel && !isReplay) {
         const zahl = erstesKippziel.zahl;
         const farbe = FARB_DISPLAY[erstesKippziel.color.name] || erstesKippziel.color.name;
         tutText.innerHTML = '<b>TIPPEN & SCHUBSEN</b><br>Das Kippziel links zeigt: <i>' + zahl + '</i> muss zu <i>' + farbe + '</i> gekippt werden.<br>TIPPE ein- bis sechsmal auf den Würfel.<br>SCHUBSE ihn anschließend in die gewünschte Richtung, um den Kippzug auszulösen.';
@@ -2344,9 +2356,10 @@
       } else if (gamePhase === 'pause') {
         endPausePhase();
       } else if (gamePhase === 'ende') {
-        // "Neues Spiel" → kompletter Reset wie resetButton
+        // "Neues Spiel" → Reset + direkt ins Spiel (ohne Erklärung)
         document.getElementById('brainScore').style.display = 'none';
         document.getElementById('brainScore').style.opacity = '0';
+        isReplay = true;
         resetButton.click();
       }
     });
@@ -2707,7 +2720,7 @@
       actionButton.style.display = 'none';
       stopCountdown();
       countdown.style.display = 'none';
-      if (activeCardIdx === 0) {
+      if (activeCardIdx === 0 && !isReplay) {
         document.getElementById('instructionText').style.display = 'block';
       }
       document.getElementById('tutorialText').style.display = 'none';
