@@ -230,10 +230,10 @@
 
     /* Toggle Switch */
     .langToggle {
-      width: 44px; height: 24px;
-      border-radius: 12px;
+      width: 72px; height: 38px;
+      border-radius: 19px;
       background: #1a0e06;
-      border: 1.5px solid #5a3a20;
+      border: 2px solid #5a3a20;
       position: relative;
       transition: background 0.2s, border-color 0.2s;
     }
@@ -244,14 +244,14 @@
     .langToggle::after {
       content: '';
       position: absolute;
-      top: 2px; left: 2px;
-      width: 18px; height: 18px;
+      top: 3px; left: 3px;
+      width: 28px; height: 28px;
       border-radius: 50%;
       background: linear-gradient(180deg, #888, #555);
       transition: transform 0.2s, background 0.2s;
     }
     .langToggle.active::after {
-      transform: translateX(20px);
+      transform: translateX(34px);
       background: linear-gradient(180deg, #f0d080, #c89b30);
     }
 
@@ -290,12 +290,12 @@
 
         <!-- Language Dropdown (sprachdrop.png as background) -->
         <div id="langDropdown">
-          <div class="langRow" data-lang="de" style="top:41.2%; height:8.7%"><div class="langToggle"></div></div>
-          <div class="langRow" data-lang="en" style="top:49.9%; height:7.6%"><div class="langToggle"></div></div>
-          <div class="langRow" data-lang="it" style="top:57.5%; height:6.8%"><div class="langToggle"></div></div>
-          <div class="langRow" data-lang="fr" style="top:64.4%; height:7.1%"><div class="langToggle"></div></div>
-          <div class="langRow" data-lang="es" style="top:71.5%; height:7.1%"><div class="langToggle"></div></div>
-          <div class="langRow" data-lang="tr" style="top:78.6%; height:7.4%"><div class="langToggle"></div></div>
+          <div class="langRow" data-lang="de" style="top:33.6%; height:11.2%"><div class="langToggle"></div></div>
+          <div class="langRow" data-lang="en" style="top:45.0%; height:9.0%"><div class="langToggle"></div></div>
+          <div class="langRow" data-lang="it" style="top:54.3%; height:8.8%"><div class="langToggle"></div></div>
+          <div class="langRow" data-lang="fr" style="top:63.4%; height:9.0%"><div class="langToggle"></div></div>
+          <div class="langRow" data-lang="es" style="top:72.7%; height:8.6%"><div class="langToggle"></div></div>
+          <div class="langRow" data-lang="tr" style="top:81.5%; height:10.4%"><div class="langToggle"></div></div>
         </div>
 
       </div>
@@ -422,13 +422,13 @@
       const langIcon = document.getElementById("langIcon");
       langIcon.style.left = (cellPx * 5) + "px";
       langIcon.style.top = iconRow + "px";
-      langIcon.style.width = cellPx + "px";
-      langIcon.style.height = cellPx + "px";
+      langIcon.style.width = "148px";
+      langIcon.style.height = "148px";
 
-      // Language Dropdown: 4 Zellen breit, Höhe proportional (Bild 677×1024)
+      // Language Dropdown: 4 Zellen breit, Höhe proportional (Bild 700×935)
       const langDD = document.getElementById("langDropdown");
       const ddWidth = cellPx * 4;
-      const ddHeight = ddWidth * (1024 / 677);
+      const ddHeight = ddWidth * (935 / 700);
       const ddRight = cellPx * 6;
       const ddLeft = ddRight - ddWidth;
       langDD.style.width = ddWidth + "px";
