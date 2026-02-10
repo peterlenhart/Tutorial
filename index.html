@@ -89,6 +89,20 @@
       z-index:0;
     }
 
+    .dimOverlay {
+      position: absolute;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 8999;
+    }
+    .dimOverlay.active {
+      opacity: 1;
+    }
+
     .uiLayer{
       position:absolute;
       left:0;
@@ -269,6 +283,7 @@
   <div class="stage">
     <div class="layout" id="layout">
       <div class="bgPNG"></div>
+      <div class="dimOverlay" id="dimOverlay"></div>
 
       <div class="uiLayer">
 
@@ -527,6 +542,7 @@
     langIcon.onclick = (e) => {
       e.stopPropagation();
       langDropdown.classList.toggle("show");
+      document.getElementById("dimOverlay").classList.toggle("active", langDropdown.classList.contains("show"));
     };
 
     // Sprache wählen → setzen, schließen
@@ -537,13 +553,14 @@
         localStorage.setItem("digikipp_lang", currentLang);
         updateToggles();
         // Auto-close nach kurzer Verzögerung
-        setTimeout(() => langDropdown.classList.remove("show"), 200);
+        setTimeout(() => { langDropdown.classList.remove("show"); document.getElementById("dimOverlay").classList.remove("active"); }, 200);
       };
     });
 
     // Klick außerhalb → Dropdown schließen
     document.addEventListener("click", () => {
       langDropdown.classList.remove("show");
+      document.getElementById("dimOverlay").classList.remove("active");
     });
     langDropdown.onclick = (e) => e.stopPropagation();
 
