@@ -2823,10 +2823,7 @@
       // 1) SHOW EYE ONLY + subtitle sequence
       // ==========================================
       const eyeIcon = document.getElementById('eyeIcon');
-      const vkPos = new THREE.Vector3(-0.234375, 0.003, cardZ);
-      vkPos.project(camera);
-      const vkScreenY = (-vkPos.y * 0.5 + 0.5) * 720;
-      eyeIcon.style.top = (vkScreenY + 10) + 'px';
+      eyeIcon.style.top = timerTopPos || '553px';
       eyeIcon.style.display = 'block';
       countdown.style.display = 'none';
 
@@ -2959,6 +2956,8 @@
       const zfText = T.d3[1].replace('{z}', kz.zahl).replace('{f}', (farbDisplay[kz.color.name] || kz.color.name));
       const d3Lines = T.d3.map(l => l === T.d3[1] ? zfText : l);
 
+      await sleep(1500);
+      if (!autoDemoActive) return;
       await showSubtitleSequence(d3Lines, 2500);
       if (!autoDemoActive) return;
       hideSubtitle();
