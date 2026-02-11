@@ -2921,6 +2921,9 @@
       verdecktesMat.needsUpdate = true;
       verdecktesMesh.material = verdecktesMat;
       drawLeernohitOnVerdecktes();
+      // Reassign canvas texture to material (previous rounds swap in fresh textures)
+      verdecktesMat.map = verdecktesCanvasTex;
+      verdecktesMat.needsUpdate = true;
 
       // Subtitle: "Klick dir dein KIPP ZIEL."
       await showSubtitle(T.d2, 2500);
