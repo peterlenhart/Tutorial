@@ -568,7 +568,7 @@
         d1:["Nach Klick aufs Auge","l\u00e4sst sich der W\u00fcrfel","mit dem Finger","durch die Box kippen."],
         d1b:["Auf Kante wippen,","Zahlenpositionen merken.","Auf Kante wippen,","Zahlenpositionen merken.","Der Counter z\u00e4hlt","die SCHAU-Sekunden."],
         d2:"Klick dir dein KIPP ZIEL.",
-        d3:["Das Kippziel zeigt:","{zf}","TIPPE 1 bis 6 mal","auf den W\u00fcrfel.","SCHUBSE ihn anschlie\u00dfend","in eine beliebige Richtung."],
+        d3:["Das Kippziel zeigt:","{z} muss zu {f}.","TIPPE 1 bis 6 mal","auf den W\u00fcrfel.","SCHUBSE ihn anschlie\u00dfend","in eine beliebige Richtung."],
         fV:"Violett", fB:"Blau", fG:"Gr\u00fcn", fO:"Orange"
       },
       "en": {
@@ -582,7 +582,7 @@
         d1:["After clicking the eye","you can tip the cube","with your finger","through the box."],
         d1b:["Tilt to the edge,","memorize number positions.","Tilt to the edge,","memorize number positions.","The counter counts","your LOOK seconds."],
         d2:"Click to reveal your TARGET.",
-        d3:["The target shows:","{zf}","TAP the cube 1 to 6 times.","","Then PUSH it","in any direction."],
+        d3:["The target shows:","{z} must reach {f}.","TAP the cube 1 to 6 times.","","Then PUSH it","in any direction."],
         fV:"Violet", fB:"Blue", fG:"Green", fO:"Orange"
       },
       "es": {
@@ -596,7 +596,7 @@
         d1:["Tras pulsar el ojo","puedes volcar el cubo","con el dedo","por la caja."],
         d1b:["Inclinar al borde,","memoriza las posiciones.","Inclinar al borde,","memoriza las posiciones.","El contador cuenta","tus segundos de MIRAR."],
         d2:"Pulsa para ver tu OBJETIVO.",
-        d3:["El objetivo muestra:","{zf}","TOCA el cubo de 1 a 6 veces.","","Luego EMP\u00daJALO","en cualquier direcci\u00f3n."],
+        d3:["El objetivo muestra:","{z} debe llegar a {f}.","TOCA el cubo de 1 a 6 veces.","","Luego EMP\u00daJALO","en cualquier direcci\u00f3n."],
         fV:"Violeta", fB:"Azul", fG:"Verde", fO:"Naranja"
       },
       "fr": {
@@ -610,7 +610,7 @@
         d1:["Apr\u00e8s clic sur l\u2019\u0153il","tu peux basculer le cube","avec le doigt","dans la bo\u00eete."],
         d1b:["Basculer sur l\u2019ar\u00eate,","m\u00e9morise les positions.","Basculer sur l\u2019ar\u00eate,","m\u00e9morise les positions.","Le compteur compte","tes secondes de REGARD."],
         d2:"Clique pour r\u00e9v\u00e9ler ta CIBLE.",
-        d3:["La cible indique :","{zf}","TAPE 1 \u00e0 6 fois","sur le cube.","Puis POUSSE-le","dans n\u2019importe quelle direction."],
+        d3:["La cible indique :","{z} doit atteindre {f}.","TAPE 1 \u00e0 6 fois","sur le cube.","Puis POUSSE-le","dans n\u2019importe quelle direction."],
         fV:"Violet", fB:"Bleu", fG:"Vert", fO:"Orange"
       },
       "it": {
@@ -624,7 +624,7 @@
         d1:["Dopo il clic sull\u2019occhio","puoi ribaltare il cubo","con il dito","nella scatola."],
         d1b:["Inclinare sul bordo,","memorizza le posizioni.","Inclinare sul bordo,","memorizza le posizioni.","Il contatore conta","i tuoi secondi di GUARDA."],
         d2:"Clicca per rivelare il BERSAGLIO.",
-        d3:["Il bersaglio mostra:","{zf}","TOCCA il cubo da 1 a 6 volte.","","Poi SPINGI","in qualsiasi direzione."],
+        d3:["Il bersaglio mostra:","{z} deve raggiungere {f}.","TOCCA il cubo da 1 a 6 volte.","","Poi SPINGI","in qualsiasi direzione."],
         fV:"Viola", fB:"Blu", fG:"Verde", fO:"Arancione"
       },
       "tr": {
@@ -638,7 +638,7 @@
         d1:["G\u00f6ze t\u0131klad\u0131ktan sonra","k\u00fcp\u00fc parma\u011f\u0131nla","kutuda","devrilebilirsin."],
         d1b:["Kenara yat\u0131r,","pozisyonlar\u0131 ezberle.","Kenara yat\u0131r,","pozisyonlar\u0131 ezberle.","Saya\u00e7 senin","BAKMA saniyelerini sayar."],
         d2:"HEDEF\u0130NI a\u00e7mak i\u00e7in t\u0131kla.",
-        d3:["Hedef g\u00f6steriyor:","{zf}","K\u00fcpe 1\u20136 kez DOKUN.","","Sonra \u0130T","herhangi bir y\u00f6ne."],
+        d3:["Hedef g\u00f6steriyor:","{z} \u2192 {f} olmal\u0131.","K\u00fcpe 1\u20136 kez DOKUN.","","Sonra \u0130T","herhangi bir y\u00f6ne."],
         fV:"Mor", fB:"Mavi", fG:"Ye\u015fil", fO:"Turuncu"
       }
     }[_digikippLang];
@@ -2486,8 +2486,11 @@
       verdecktesMat.opacity = 1;
       verdecktesMat.needsUpdate = true;
       verdecktesMesh.material = verdecktesMat;
+      verdecktesMesh.visible = true;
       verdecktesMesh.scale.set(1, 1, 1);
       verdecktesMesh.userData.revealed = true;
+      // Force renderer update
+      renderer.render(scene, camera);
     }
 
     // Perform N kipps in given direction (no game-state side effects)
@@ -2953,8 +2956,8 @@
       // ==========================================
       // Build d3 with actual zahl+farbe
       const farbDisplay = { violett: T.fV, blau: T.fB, gruen: T.fG, orange: T.fO };
-      const zfText = kz.zahl + ' \u2192 ' + (farbDisplay[kz.color.name] || kz.color.name);
-      const d3Lines = T.d3.map(l => l === '{zf}' ? zfText : l);
+      const zfText = T.d3[1].replace('{z}', kz.zahl).replace('{f}', (farbDisplay[kz.color.name] || kz.color.name));
+      const d3Lines = T.d3.map(l => l === T.d3[1] ? zfText : l);
 
       await showSubtitleSequence(d3Lines, 2500);
       if (!autoDemoActive) return;
