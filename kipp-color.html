@@ -2410,7 +2410,7 @@
       perLine = perLine || 2500;
       for (let i = 0; i < lines.length; i++) {
         if (!autoDemoActive) return;
-        const dur = (i === 0) ? 3000 : perLine;
+        const dur = (i === 0) ? 4000 : perLine;
         await showSubtitle(lines[i], dur);
       }
     }
@@ -2821,7 +2821,9 @@
       eyeIcon.style.display = 'block';
       countdown.style.display = 'none';
 
-      // Subtitle: explain eye/schauen
+      // Subtitle: explain eye/schauen (1.5s pause first to let user settle)
+      await sleep(1500);
+      if (!autoDemoActive) return;
       await showSubtitleSequence(T.d1, 2500);
       if (!autoDemoActive) return;
 
