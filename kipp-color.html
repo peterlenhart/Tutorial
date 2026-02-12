@@ -2787,7 +2787,21 @@
       eyePause.style.display = 'none';
       demoPauseResolve = null;
       if (choice === 'play' || !autoDemoActive) return;
-      // Auge geklickt → Demo von vorne
+      // Auge geklickt → alles aufräumen, Demo von vorne
+      verdecktesMesh.visible = false;
+      gameCards.forEach(c => c.mesh.visible = false);
+      document.getElementById('kippTarget').style.display = 'none';
+      tapIndicatorA.mesh.visible = false;
+      tapIndicatorB.mesh.visible = false;
+      countdown.style.display = 'none';
+      handDemo.visible = false;
+      cube.position.set(-offset, offset, 0.109375 + offset);
+      cube.quaternion.set(0, 0, 0, 1);
+      currentQuadrant = 3;
+      topFace = 'f2';
+      bereitsGetroffen.clear();
+      bereitsAusgegeben.clear();
+      activeCardIdx = 0;
       runAutoDemo();
     }
 
