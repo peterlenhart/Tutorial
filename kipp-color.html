@@ -2402,8 +2402,8 @@
     // AUTO-DEMO MODULE
     // =========================
     let autoDemoActive = false;
-    let demoPauseResolve = null;  // resolve callback for eye/back-arrow choice
-    let demoCycleInterval = null; // cycling subtitle interval
+    let demoPauseResolve = null;
+    let demoCycleInterval = null;
 
     // === SUBTITLE ENGINE ===
     const subEl = document.getElementById('demoSubtitle');
@@ -2767,6 +2767,45 @@
         if (!autoDemoActive) return;
         await autoDemoRound(round, hitPattern[round]);
         if (!autoDemoActive) return;
+
+        // === INTER-ROUND PAUSE: Eye + cycling subtitles ===
+        // Show eye icon (pulsing)
+        const eyeIconPause = document.getElementById('eyeIcon');
+        eyeIconPause.style.top = (parseInt(timerTopPos || '553') + 26) + 'px';
+        eyeIconPause.style.display = 'block';
+
+        // Start cycling dc1/dc2 subtitles (switch every 3s with fade)
+        let cycleIdx = 0;
+        const cycleTexts = [T.dc1, T.dc2];
+        subEl.innerHTML = cycleTexts[0];
+        subEl.style.display = 'block';
+        subEl.style.opacity = '1';
+        demoCycleInterval = setInterval(() => {
+          cycleIdx = (cycleIdx + 1) % 2;
+          subEl.style.opacity = '0';
+          setTimeout(() => {
+            if (!demoCycleInterval) return;
+            subEl.innerHTML = cycleTexts[cycleIdx];
+            subEl.style.opacity = '1';
+          }, 350);
+        }, 3000);
+
+        // Wait for user: eye click → 'continue', back arrow → 'play'
+        const userChoice = await new Promise(resolve => {
+          demoPauseResolve = resolve;
+        });
+
+        // Cleanup
+        if (demoCycleInterval) { clearInterval(demoCycleInterval); demoCycleInterval = null; }
+        hideSubtitle();
+        eyeIconPause.style.display = 'none';
+        demoPauseResolve = null;
+
+        if (userChoice === 'play' || !autoDemoActive) {
+          // User chose to play → exit demo loop
+          return;
+        }
+        // userChoice === 'continue' → next round
       }
 
       // ==========================================
@@ -2842,37 +2881,7 @@
       if (!autoDemoActive) return;
       await showSubtitleSequence(T.d1, 2500);
       if (!autoDemoActive) return;
-
-      // Start cycling dc1/dc2 subtitles synced with eye pulse (1.5s per cycle)
-      let cycleIdx = 0;
-      const cycleTexts = [T.dc1, T.dc2];
-      subEl.innerHTML = cycleTexts[0];
-      subEl.style.display = 'block';
-      subEl.style.opacity = '1';
-      demoCycleInterval = setInterval(() => {
-        cycleIdx = (cycleIdx + 1) % 2;
-        subEl.style.opacity = '0';
-        setTimeout(() => {
-          if (!demoCycleInterval) return;
-          subEl.innerHTML = cycleTexts[cycleIdx];
-          subEl.style.opacity = '1';
-        }, 350);
-      }, 3000);
-
-      // Wait for user choice: eye click (continue) or back arrow (play)
-      const userChoice = await new Promise(resolve => {
-        demoPauseResolve = resolve;
-      });
-      
-      // Cleanup cycling
-      if (demoCycleInterval) { clearInterval(demoCycleInterval); demoCycleInterval = null; }
       hideSubtitle();
-      demoPauseResolve = null;
-
-      if (userChoice === 'play' || !autoDemoActive) {
-        // User chose to play - exit demo
-        return;
-      }
 
       // ==========================================
       // 2) AUTO-"CLICK" EYE → SCHAUEN
@@ -3192,7 +3201,6 @@
     eyeEl.addEventListener('touchend', (e) => {
       e.stopPropagation();
       e.preventDefault();
-      // Handle autoDemo eye click
       if (gamePhase === 'autoDemo' && demoPauseResolve) {
         demoPauseResolve('continue');
         return;
@@ -3206,7 +3214,6 @@
     }, { passive: false });
     eyeEl.addEventListener('click', (e) => {
       e.stopPropagation();
-      // Handle autoDemo eye click
       if (gamePhase === 'autoDemo' && demoPauseResolve) {
         demoPauseResolve('continue');
         return;
@@ -3840,14 +3847,12 @@
     // - In allen anderen Phasen → Reset + zurück zum Start-Overlay
     resetButton.addEventListener('click', () => {
       if (gamePhase === 'start') {
-        // Auf Start-Overlay → zurück zum Hauptmenü
         window.location.href = 'index.html';
         return;
       }
       
-      // During autoDemo eye pause → start game
+      // During autoDemo pause → start game (like SPIELEN button)
       if (gamePhase === 'autoDemo' && demoPauseResolve) {
-        // Stop demo cleanly
         autoDemoActive = false;
         if (demoCycleInterval) { clearInterval(demoCycleInterval); demoCycleInterval = null; }
         hideSubtitle();
@@ -3887,7 +3892,6 @@
         offeneKippzieleVergeben = 0;
         openKippzielPositions = pickTwoRandomPositions();
         
-        // Start game (like SPIELEN button)
         isReplay = true;
         gamePhase = 'spielziel';
         initSpielzielPhase();
