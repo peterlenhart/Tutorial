@@ -2789,6 +2789,7 @@
       demoPauseResolve = null;
       if (choice === 'play' || !autoDemoActive) return;
       // Auge geklickt → alles aufräumen, Demo von vorne
+      if (savedDemoData) savedDemoData.kombi = null;
       verdecktesMesh.visible = false;
       gameCards.forEach(c => c.mesh.visible = false);
       document.getElementById('kippTarget').style.display = 'none';
