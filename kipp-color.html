@@ -1836,6 +1836,7 @@
       document.getElementById('entscheidungText').style.display = 'none';
       document.getElementById('eyeIcon').style.display = 'none';
       document.getElementById('demoSpielenBtn').style.display = 'none';
+      document.getElementById('rwButton').style.display = 'none';
       countdown.style.display = 'none';
       
       // Wie viele Treffer?
@@ -2802,6 +2803,7 @@
       demoSpBtn.style.top = (parseInt(timerTopPos) + 45) + 'px';
       demoSpBtn.style.left = '180px';
       demoSpBtn.style.display = 'block';
+      document.getElementById('rwButton').style.display = 'block';
 
       // Hit/Miss pattern: 4 Hits, 2 Misses (realistic good player)
       const hitPattern = [true, true, false, true, true, false];
@@ -2823,6 +2825,7 @@
       document.getElementById('kippTarget').style.display = 'none';
       document.getElementById('eyeIcon').style.display = 'none';
       document.getElementById('demoSpielenBtn').style.display = 'none';
+      document.getElementById('rwButton').style.display = 'none';
       tapIndicatorA.mesh.visible = false;
       tapIndicatorB.mesh.visible = false;
 
@@ -3110,6 +3113,10 @@
       runAutoDemo();
     });
 
+    document.getElementById('rwButton').addEventListener('click', () => {
+      document.getElementById('demoSpielenBtn').click();
+    });
+
     document.getElementById('demoSpielenBtn').addEventListener('click', () => {
       // Stop demo and go directly to game
       autoDemoActive = false;
@@ -3118,6 +3125,7 @@
       verdecktesMesh.visible = false;
       document.getElementById('eyeIcon').style.display = 'none';
       document.getElementById('demoSpielenBtn').style.display = 'none';
+      document.getElementById('rwButton').style.display = 'none';
       document.getElementById('kippTarget').style.display = 'none';
       document.getElementById('brainScore').style.display = 'none';
       tapIndicatorA.mesh.visible = false;
@@ -3157,6 +3165,7 @@
       document.getElementById('entscheidungText').style.display = 'none';
       document.getElementById('eyeIcon').style.display = 'none';
       document.getElementById('demoSpielenBtn').style.display = 'none';
+      document.getElementById('rwButton').style.display = 'none';
       document.getElementById('kippTarget').style.display = 'none';
       document.getElementById('brainScore').style.display = 'none';
       actionButton.style.display = 'none';
@@ -3267,6 +3276,7 @@
       // Auge ausblenden, Timer zeigen
       document.getElementById('eyeIcon').style.display = 'none';
       document.getElementById('demoSpielenBtn').style.display = 'none';
+      document.getElementById('rwButton').style.display = 'none';
       document.getElementById('entscheidungText').style.display = 'none';
       
       // Unsichtbarer Spacer für Text-Umfluss um animierte 3D-Hand
@@ -3425,6 +3435,7 @@
       document.getElementById('entscheidungText').style.display = 'none';
       document.getElementById('eyeIcon').style.display = 'none';
       document.getElementById('demoSpielenBtn').style.display = 'none';
+      document.getElementById('rwButton').style.display = 'none';
       
       // verdecktesMesh bleibt sichtbar (zeigt aufgedecktes Kippziel)
       verdecktesMesh.userData.revealed = true;
@@ -3542,6 +3553,7 @@
       // Entscheidungs-UI ausblenden
       document.getElementById('eyeIcon').style.display = 'none';
       document.getElementById('demoSpielenBtn').style.display = 'none';
+      document.getElementById('rwButton').style.display = 'none';
       document.getElementById('entscheidungText').style.display = 'none';
       
       // Nach 1,5s Spielphase starten
@@ -3811,6 +3823,7 @@
       // Auge ausblenden, keine Texte
       document.getElementById('eyeIcon').style.display = 'none';
       document.getElementById('demoSpielenBtn').style.display = 'none';
+      document.getElementById('rwButton').style.display = 'none';
       document.getElementById('entscheidungText').style.display = 'none';
       document.getElementById('instructionText').style.display = 'none';
       document.getElementById('tutorialText').style.display = 'none';
@@ -3903,6 +3916,7 @@
       document.getElementById('tutorialText').style.display = 'none';
       document.getElementById('eyeIcon').style.display = 'none';
       document.getElementById('demoSpielenBtn').style.display = 'none';
+      document.getElementById('rwButton').style.display = 'none';
       document.getElementById('entscheidungText').style.display = 'none';
       hintText.style.display = 'none';
       actionButton.style.display = 'none';
