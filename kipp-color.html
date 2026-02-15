@@ -1901,18 +1901,114 @@
       const d = window._brainScoreData;
       if (!d) return;
       
-      // Kippstil-Titel
+      // Kippstil-Titel (24 Szenarien, Entschlossenheit immer im Verhältnis zur Trefferquote)
       let kippTitel, kippMsg;
-      if (d.zuegigPct >= 80) {
+      
+      // === GRENZWERT TOP (BSc ~90-100) ===
+      if (d.hits === 6 && d.kniffs === 0 && d.zuegigPct >= 80) {
+        // #1 BRAIN PRO
+        kippTitel = 'BRAIN PRO';
+        kippMsg = 'Perfektes Spiel! 6 aus 6, ohne Nachschauen, entschlossen gekippt. Besser geht\u2019s nicht.';
+      } else if (d.hits === 6 && d.kniffs === 0 && d.zuegigPct < 80) {
+        // #2 MASTER MIND
+        kippTitel = 'MASTER MIND';
+        kippMsg = 'Alle getroffen, kein Kniff gebraucht. Etwas schneller kippen und du erreichst die 100.';
+      
+      // === OBERE MITTE (BSc ~55-90) ===
+      } else if (d.hits >= 5 && d.zuegigPct >= 80 && d.kniffs <= 1) {
+        // #3 KIPPMEISTER
         kippTitel = 'KIPPMEISTER';
-        kippMsg = 'Jeder Kipp saß. Du planst und handelst.';
-      } else if (d.zuegigPct >= 50) {
+        kippMsg = 'Jeder Kipp sa\u00df. Du planst und handelst \u2013 Chapeau!';
+      } else if (d.hits >= 5 && d.kniffs >= 3 && d.zuegigPct >= 60) {
+        // #4 PERFEKTIONIST
+        kippTitel = 'PERFEKTIONIST';
+        kippMsg = 'Starke Trefferquote! Aber viel nachgeschaut. Durchschau die Kipplogik \u2013 wie drehen sich die Fl\u00e4chen beim Kippen? Dann brauchst du weniger Kniffs.';
+      } else if (d.hits >= 4 && d.kniffs === 0 && d.zuegigPct < 40) {
+        // #5 GEDÄCHTNISKÜNSTLER
+        kippTitel = 'GED\u00c4CHTNISK\u00dcNSTLER';
+        kippMsg = 'Du triffst gut, brauchst aber lange zum Kippen. Vertraue deinem Ged\u00e4chtnis \u2013 du wei\u00dft mehr als du denkst!';
+      } else if (d.hits >= 3 && d.zuegigPct >= 40 && d.zuegigPct <= 70 && d.kniffs <= 2) {
+        // #6 STRATEGE
+        kippTitel = 'STRATEGE';
+        kippMsg = 'Clever: Nachgeschaut wenn n\u00f6tig, entschlossen gekippt wenn sicher. Weiter so!';
+      } else if (d.hits === 4 && d.zuegigPct >= 70 && d.kniffs <= 1) {
+        // #7 ROUTINIER
+        kippTitel = 'ROUTINIER';
+        kippMsg = 'Solide Leistung mit klarem Plan. Ein bis zwei Treffer mehr und du bist Meisterklasse.';
+      } else if (d.hits >= 3 && d.hits <= 4 && d.zuegigPct >= 50 && d.kniffs >= 2 && d.kniffs <= 3) {
+        // #8 TAKTIKER
         kippTitel = 'TAKTIKER';
-        kippMsg = 'Guter Mix. Etwas mehr Planung vorher und du bist top.';
-      } else if (d.zuegigPct >= 25) {
-        kippTitel = 'GRÜBLER';
-        kippMsg = 'Plane Anzahl und Richtung VOR dem Kippen!';
+        kippMsg = 'Guter Mix aus Merken und Nachschauen. Etwas weniger Kniffs und du bist top.';
+      
+      // === MITTE (BSc ~20-55) ===
+      } else if (d.hits === 3 && d.zuegigPct >= 40 && d.zuegigPct <= 60 && d.kniffs >= 2 && d.kniffs <= 3) {
+        // #9 HALBWISSER
+        kippTitel = 'HALBWISSER';
+        kippMsg = 'Die H\u00e4lfte getroffen \u2013 da geht noch was. Beim Schauen gezielter auf die Lagen achten.';
+      } else if (d.hits === 2 && d.zuegigPct >= 50 && d.zuegigPct <= 70 && d.kniffs <= 2) {
+        // #10 WECHSELHAFT
+        kippTitel = 'WECHSELHAFT';
+        kippMsg = 'Mal treffsicher, mal daneben. Mehr Konstanz kommt mit \u00dcbung.';
+      } else if (d.hits >= 1 && d.hits <= 2 && d.zuegigPct >= 70 && d.kniffs <= 2) {
+        // #11 GLÜCKSKIPPER
+        kippTitel = 'GL\u00dcCKSKIPPER';
+        kippMsg = 'Du kippst auf gut Gl\u00fcck \u2013 manchmal trifft\u2019s! Bei KIPP CARD geht das auch mit weniger pr\u00e4zisen Kipps.';
+      } else if (d.hits >= 2 && d.hits <= 3 && d.zuegigPct < 30 && d.kniffs <= 2) {
+        // #12 SPÄTZÜNDER
+        kippTitel = 'SP\u00c4TZ\u00dcNDER';
+        kippMsg = 'Ein paar Treffer, aber viel gez\u00f6gert. Nutze KIPP KNIFFS effektiver.';
+      } else if (d.hits === 2 && d.zuegigPct < 40 && d.kniffs >= 2 && d.kniffs <= 3) {
+        // #13 VORSICHTIGER
+        kippTitel = 'VORSICHTIGER';
+        kippMsg = 'Nachgeschaut und trotzdem unsicher gekippt. Merk dir beim Schauen gezielt eine Zahl pro Seite.';
+      } else if (d.hits >= 2 && d.hits <= 3 && d.zuegigPct < 30 && d.kniffs >= 3) {
+        // #14 GRÜBLER
+        kippTitel = 'GR\u00dcBLER';
+        kippMsg = 'Viel nachgeschaut, wenige Treffer. Denk \u00fcber die Bewegungslogik nach: Was passiert mit den Zahlen bei 3 oder 6 Kipps? Logik und Merken zusammen ersetzt viel Gr\u00fcbeln.';
+      } else if (d.hits >= 1 && d.hits <= 2 && d.kniffs >= 4) {
+        // #15 NACHSCHAUER
+        kippTitel = 'NACHSCHAUER';
+        kippMsg = 'Oft nachgeschaut und trotzdem wenig getroffen. Erg\u00e4nze dein Merken mit Kipplogik: Wie wandern die Fl\u00e4chen beim Kippen?';
+      } else if (d.hits === 1 && d.zuegigPct >= 30 && d.zuegigPct <= 60 && d.kniffs >= 2 && d.kniffs <= 3) {
+        // #16 SUCHENDER
+        kippTitel = 'SUCHENDER';
+        kippMsg = 'Nur ein Treffer. Konzentrier dich beim Schauen auf zwei Zahlen und ihre Position.';
+      } else if (d.hits === 1 && d.zuegigPct >= 70 && d.kniffs <= 1) {
+        // #17 DRAUFGÄNGER
+        kippTitel = 'DRAUFG\u00c4NGER';
+        kippMsg = 'Schnell gekippt aber kaum getroffen. Entschlossenheit ist gut \u2013 mit mehr Merken wirst du sicherer.';
+      } else if (d.hits >= 1 && d.hits <= 2 && d.kniffs >= 5) {
+        // #18 IRRLÄUFER
+        kippTitel = 'IRRL\u00c4UFER';
+        kippMsg = 'Trotz viel Nachschauen kaum Treffer. Kombiniere Merken mit Logik: Wie drehen sich die Fl\u00e4chen? Was ist das Besondere an 3 und 6 Kipps? Wer das durchschaut, braucht weniger Kniffs.';
+      
+      // === UNTERE MITTE (BSc ~1-20, 0 Hits) ===
+      } else if (d.hits === 0 && d.zuegigPct >= 80 && d.kniffs === 0) {
+        // #19 BLINDKIPPER
+        kippTitel = 'BLINDKIPPER';
+        kippMsg = 'Blitz-Tempo ohne Nachschauen \u2013 mutig! Aber ohne Plan ist Kippen Lotterie. Schau dir die Zahlenlage besser an.';
+      } else if (d.hits === 0 && d.zuegigPct >= 50 && d.kniffs <= 2) {
+        // #20 GLÜCKSSPIELER
+        kippTitel = 'GL\u00dcCKSSPIELER';
+        kippMsg = 'Entschlossen gekippt, aber null Treffer. Ohne Merken, ohne Logik ist KIPPEN wie Roulette.';
+      } else if (d.hits === 0 && d.zuegigPct < 40 && d.kniffs >= 3) {
+        // #21 RÄTSELRATER
+        kippTitel = 'R\u00c4TSELRATER';
+        kippMsg = 'Viel geschaut, nichts getroffen. Merken und Kipplogik zusammen bringen dich weiter: Wie bewegen sich die Zahlen beim Kippen? Fang mit zwei gegen\u00fcberliegenden Zahlen an.';
+      } else if (d.hits === 0 && d.zuegigPct < 25 && d.kniffs <= 2) {
+        // #22 ZÖGERER
+        kippTitel = 'Z\u00d6GERER';
+        kippMsg = 'Viel gez\u00f6gert und nicht getroffen. Nutze KNIFFS f\u00fcrs W\u00fcrfel Kennenlernen.';
+      } else if (d.hits === 0 && d.kniffs >= 3 && d.zuegigPct < 30) {
+        // #24 NEULING
+        kippTitel = 'NEULING';
+        kippMsg = 'Kein Treffer trotz viel Nachschauen. Merken und Logik zusammen helfen: Welche Zahlen liegen sich an den Kanten gegen\u00fcber? Bei 3 und 6 Kipps passiert etwas Besonderes \u2013 findest du es heraus?';
+      } else if (d.hits === 0) {
+        // #23 BEOBACHTER (0-Hits Fallback)
+        kippTitel = 'BEOBACHTER';
+        kippMsg = 'Noch kein Treffer. Merke dir die Zahlen-Lagen beim Schauen, dann kippe entschlossen.';
       } else {
+        // General Fallback
         kippTitel = 'BEOBACHTER';
         kippMsg = 'Merke dir die Zahlen-Lagen beim Schauen, dann kippe entschlossen.';
       }
@@ -1981,7 +2077,7 @@
         '<button id="neuesSpielBtn" style="width:200px;height:49px;' +
           'background:url(\'button_kurz.webp\') center/contain no-repeat;' +
           'border:none;cursor:pointer;font-family:Arial,sans-serif;' +
-          'font-size:15px;font-weight:bold;letter-spacing:1.5px;' +
+          'font-size:18px;font-weight:bold;letter-spacing:2.5px;' +
           'color:#d0d0d0;text-shadow:0 1px 1px rgba(255,255,255,0.4), 0 -1px 1px rgba(0,0,0,0.6);">' +
           T.n + '</button>';
       
@@ -4506,11 +4602,17 @@
               // Vorherigen Auto-Eval-Timer löschen
               if (autoEvalTimeout) { clearTimeout(autoEvalTimeout); autoEvalTimeout = null; }
               // Liegezeit-Schwelle: wenn Würfel 1s liegt → Kippzug eingeloggt
-              autoEvalTimeout = setTimeout(() => {
-                if (gamePhase === 'spielen' && !kippzielChecked && !isAnimating && !dragActive) {
+              function tryAutoEval() {
+                if (gamePhase !== 'spielen' || kippzielChecked) return;
+                if (isAnimating || dragActive) {
+                  // Bedingung nicht erfüllt → 200ms später nochmal prüfen
+                  autoEvalTimeout = setTimeout(tryAutoEval, 200);
+                } else {
+                  autoEvalTimeout = null;
                   checkKippzielTap();
                 }
-              }, LIEGEZEIT_SCHWELLE);
+              }
+              autoEvalTimeout = setTimeout(tryAutoEval, LIEGEZEIT_SCHWELLE);
             }
 
           }
